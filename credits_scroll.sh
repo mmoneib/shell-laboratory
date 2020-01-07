@@ -27,8 +27,10 @@ function printLines {
   lines=("$@");
   offset=-$windowLinesCount;
   while (($offset<=${#lines[@]}+$windowLinesCount&&$offset<${#lines[@]})); do
-    clear;
-    for ((i=$offset;i<$offset+$windowLinesCount;i++)); do # the viewable window.
+    #clear;
+    tput cup 0 0; # Restores the position of the cursor to the origin to start writing over. More efficient than clear at high frame rates.
+    for ((i=$offset;i<$offset+$windowLinesCount-1;i++)); do # the viewable window.
+      printf "\033[K"; # Used in combination with tput's origin to clear each line before writing over it. Avoids leftovers.
       if ((i<0 || i>=${#lines[@]})); then
         echo;
       else
@@ -36,7 +38,15 @@ function printLines {
       fi
     done
     ((offset++));
-    sleep "$sleepTime"s;
+    read -N 1 -s -t "$sleepTime" keyPress </dev/tty; # Read one character silently with a timeout equals to the sleeping time. Used instead of sleep for scheduling echoes.
+    if [[ ! -z $keyPress && $keyPress == ' ' ]]; then
+      while (true); do
+        read -N 1 -s keyPress </dev/tty; # Force reading from stdin to allow interactivity in the case of pipinr. Here, the user can resume the scrolling.
+        if [[ ! -z $keyPress && $keyPress == ' ' ]]; then
+          break;
+        fi
+      done
+    fi
   done
 }
 

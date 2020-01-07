@@ -25,6 +25,8 @@ function readLineByCharacterNumberOrLineDelimiter {
   done
 }
 
+IFS= # To preserve leading spaces.
+
 if [[ ! -z $pon_maxCharsToReadPerLine ]]; then
   func="readLineByCharacterNumberOrLineDelimiter";
 else
