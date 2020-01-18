@@ -41,20 +41,32 @@ function switchGnomeMagnifierOnOff {
 }
 
 function zoomMouseEventDetect { # Forked and piped, so all (even global which are copied) variables are limited to its scope.
-  while read -r inp; do
-    if [[ ! -z $(echo "$inp" | grep "vert -") ]]; then
-      magFactor=$(echo "scale=1;$magFactor+0.1"|bc); # The tool bc is used for decimals calc.
-    elif  [[ ! -z $(echo "$inp" | grep "vert") ]]; then
-      magFactor=$(echo "scale=1;$magFactor-0.1"|bc);
-      if (($(echo "$magFactor<1"|bc)==1)); then
-        magFactor=1;
+  # 4th script-specific sub-process as shown by echo "$BASHPID". Created because libinput creates a process of its own.
+  stream=true;
+  function resetInput { stream=false;} # On resumption, set the flag to false so as to reset the input stream.
+  trap resetInput CONT;
+  while (true); do
+    while read inp; do
+      if [[ $stream != true ]]; then
+        break;
       fi
-    fi 
-    sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
+      if [[ ! -z $(echo "$inp" | grep "vert -") ]]; then
+        magFactor=$(echo "scale=1;$magFactor+0.1"|bc); # The tool bc is used for decimals calc.
+      elif  [[ ! -z $(echo "$inp" | grep "vert") ]]; then
+        magFactor=$(echo "scale=1;$magFactor-0.1"|bc);
+        if (($(echo "$magFactor<1"|bc)==1)); then
+          magFactor=1;
+        fi
+      fi 
+      sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
+    done
+    read -t 0.5 -N 10000; # Flushing the accumulated date to read anew, because the input is buffered until read. :-/ Not optimal solution.
+    stream=true;
   done
 }
 
 function zoomKeyboardEventDetect {
+  # 3rd script-specific sub-process as shown by echo "$BASHPID". Created because libinput creates a process of its own.
   pkill --signal STOP -P $!; # Default action is to prevent zooming.
   while read -r inp1; do
     if [[ ! -z $(echo "$inp1" | grep -E "KEYBOARD.*pressed") ]]; then # .* to grep with AND.      
@@ -77,8 +89,9 @@ trap initializeGnomeMagnifierSettings EXIT;
 initializeGnomeMagnifierSettings;
 tryToDetectKeyboard;
 # stdbuf is used to remove the buffering and allow detection of the continuous stream.
-(stdbuf -oL libinput debug-events | stdbuf -oL grep "wheel" | zoomMouseEventDetect)& # The & is for forking the child process as the mouse detection of libinput produces more events.
-stdbuf -oL libinput debug-events $kbd --show-keycodes | stdbuf -oL grep "KEY_LEFTALT" | zoomKeyboardEventDetect; # \| to grep with OR. 
+# The & is for forking the child process as the mouse detection of libinput produces more events.
+(stdbuf -oL libinput debug-events | stdbuf -oL grep "POINTER_AXIS" | zoomMouseEventDetect)&  # 2nd script-specific sub-process as shown by echo "$BASHPID".
+stdbuf -oL libinput debug-events $kbd --show-keycodes | stdbuf -oL grep "KEY_LEFTALT" | zoomKeyboardEventDetect; # Main (top) process as shown by echo $$.
 
 #TODO Add hot support for lense mode.
 #TODO Add touchpad and touch screen pinching support.
