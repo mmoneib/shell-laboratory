@@ -1,6 +1,7 @@
 #!/bin/bash
 ###############################################################################
-# Parse parameters passed to the script in a convenient way without shifting. #
+# Parse parameters passed to the script in a customizable amd convenient way  #
+# without shifting and without getopts.                                       #
 # Meant to be sourced by other scripts.                                       #
 # Developer: Muhammad Moneib                                                  #
 ###############################################################################
