@@ -1,10 +1,15 @@
 #!/bin/bash
-###############################################################################
-# Parse parameters passed to the script in a customizable amd convenient way  #
-# without shifting and without getopts.                                       #
-# Meant to be sourced by other scripts.                                       #
-# Developer: Muhammad Moneib                                                  #
-###############################################################################
+################################################################################
+# Check Options Parameter v.1.0                                                #
+#                                                                              #
+# Description: Parse parameters passed to the script in a customizable and     #
+# convenient way without shifting and without getopts.                         #
+#                                                                              #
+# Type: To be sourced by other scripts.                                        #
+# Dependencies: Bash                                                           #
+# License: CC BY-SA                                                            #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
 
 cop_options=(); # Potential output.
 cop_hasOption=false; # Potential output.
