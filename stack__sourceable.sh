@@ -1,10 +1,14 @@
 #!/bin/bash
-###########################################################################
-# A simple stack implementation with the pointer pointing to the space    #
-# above the top-most element.                                             #
-# This script is meant to be used on its own and as a sourcing one.       #
-# Author: Muhammad Moneib                                                 #
-###########################################################################
+################################################################################
+# Stack                                                                        #
+#                                                                              #
+# A simple stack implementation with the pointer pointing to the space above   #
+# the top-most element.                                                        # 
+#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
 
 st_stackArr=();
 st_topElement=;

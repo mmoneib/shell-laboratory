@@ -1,11 +1,17 @@
 #!/bin/bash
-#####################################################################################################
-# A script to detect whether the program should read the input from a pipe or a parameterized file. #
-# Meant to be sourced into other scripts. The piping criteria can be set in the sourcing scripts    #
-# to detect whether a file input parameter is present or not.                                       #
-# The value pon_fileParameterPosition must be initialized.                                          #
-# Developed by: Muhammad Moneib                                                                     #
-#####################################################################################################
+################################################################################
+# Piped or Not                                                                 #
+#                                                                              #
+# A script to detect whether the program should read the input from a pipe or  #
+# a parameterized file. Meant to be sourced into other scripts. The piping     #
+# criteria can be set in the sourcing scripts to detect whether a file input   #
+# parameter is present or not. # The value pon_fileParameterPosition must be   #
+# initialized.                                                                 #
+#                                                                              #                
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
 
 pon_outputLines=(); # Output.
 

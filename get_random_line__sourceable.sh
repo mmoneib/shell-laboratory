@@ -1,4 +1,14 @@
 #!/bin/bash
+################################################################################
+# Get a Random Lne.                                                            #
+#                                                                              #
+# Description: Does as the title says.                                         #
+#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
+
 f=$1;
 if [[ -z $f ]]; then
   #To deal with piped input like from a cat operation.

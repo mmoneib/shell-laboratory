@@ -1,4 +1,14 @@
 #!/bin/bash
+################################################################################
+# Count Characters in a String                                                 #
+#                                                                              #
+# Description: Does as the title says.                                         #
+#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
+
 str=$1;
 car=$2
 c=0;

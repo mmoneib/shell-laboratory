@@ -1,9 +1,15 @@
 #!/bin/bash
-#############################################################################################
-# An in-place, bottom-up text scroller for Linux command-line as in end credits of a movie. #
-# It can be used in a piping context or on its own.                                         #
-# Developed by: Muhammad Moneib.                                                            #
-#############################################################################################
+################################################################################
+# Credits Scroller                                                             #
+#                                                                              #
+# An in-place, bottom-up text scroller for Linux command-line as in end        #
+# credits of a movie. It can be used in a piping context or on its own.        #
+#                                                                              #
+# Type: To be used as a standalone.                                            #
+# Dependencies: Bash, check_option_parameter__sourced.sh,                      # 
+#   piped_or_not__sourced.sh.                                                  #
+# Developed by: Muhammad Moneib.                                               #
+################################################################################
 
 windowLinesCount=$(tput lines); # $() used to evaluate the script, as lines is not a command or option. The command tput queries the terminfo database for info about the current terminal.
 windowColumnsCount=$(tput cols);

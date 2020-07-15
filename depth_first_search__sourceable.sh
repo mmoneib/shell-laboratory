@@ -1,12 +1,16 @@
 #!/bin/bash
-###########################################################################
-# A depth-first-search implementation with option to provide the order    #
-# of putting, or removing the elements. This allows different utilities   #
-# like searching from the root outwards (putting) or from the leaves      #
-# inwards (removing).                                                     #
-# This script is meant to be used on its own and as a sourcing one.       #
-# Author: Muhammad Moneib                                                 #
-###########################################################################
+################################################################################
+# Depth First Search                                                           #
+#                                                                              #
+# A depth-first-search implementation with option to provide the order of      # 
+# putting, or removing the elements. This allows different utilities like      # 
+# searching from the root outwards (putting) or from the leaves inwards        #
+# (removing).                                                                  #
+#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash, stack__sourceable.sh                                     #   
+# Developed by: Muhammad Moneib.                                               #
+################################################################################
 
 source stack__sourceable.sh;
 

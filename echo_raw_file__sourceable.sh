@@ -1,11 +1,17 @@
 #!/bin/bash
-##################################################################################
-# A parser of raw files which takes care of division into chunks and repetitions
-# and detecting repetitions based on a given format. The purpose is to allow the
-# user to visualize and stream the raw data and uses it as he wants without 
-# a fuss and in a simple way.
-# Author: Muhammad Moneib
-##################################################################################
+################################################################################
+# Raw File Echoer                                                              #
+#                                                                              #
+# A parser of raw files which takes care of division into chunks and           #
+# repetitions # and detecting repetitions based on a given format. The purpose #
+# is to allow the # user to visualize and stream the raw data and uses it as   #
+# he wants without a fuss and in a simple way.                                 #
+#                                                                              #
+# Type: To be used as a standalone or as a source.                             #
+# Dependencies: Bash, check_option_parameter__sourced,                         #        
+#   depth_first_search__sourceable.sh.                                         #   
+# Developed by: Muhammad Moneib.                                               #
+################################################################################
 
 source check_option_parameter__sourced.sh;
 source depth_first_search__sourceable.sh;

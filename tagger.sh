@@ -1,13 +1,18 @@
 #!/bin/bash
 ################################################################################
-# Tagger is a simple Digital Resources Management System.
-# Tag resources (like files) and search for them in a semi-structured manner.
-# Each resource has many tags which may follow certain conventions and are 
-# indexed in files pointing to their resources. Each resource type has one 
-# an action attached to it.
-#
-# Developer: Muhammad Moneib
+# Tagger                                                                       #
+#                                                                              #
+# Tagger is a simple Digital Resources Management System.                      #
+# Tag resources (like files) and search for them in a semi-structured manner.  #
+# Each resource has many tags which may follow certain conventions and are     #
+# indexed in files pointing to their resources. Each resource type has one     #
+# an action attached to it.                                                    #
+#                                                                              #
+# Type: To be used as a standalone.                                            #
+# Dependencies: Bash.                                                          #
+# Developed by: Muhammad Moneib.                                               #
 ################################################################################
+
 
 declare -a typeActions;
 pathForResources="resources/tagger/";

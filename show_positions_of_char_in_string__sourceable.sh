@@ -1,14 +1,12 @@
 #!/bin/bash
 ################################################################################
-# Show Position of Chars in String v1.0                                        #
+# Show Position of Chars in String                                             #
 #                                                                              #
 # Description: Does as it says.                                                #
 #                                                                              #
-# Environment: Bash                                                            #
-# Type: Sourceable                                                             #
-#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
 # Developed by: Muhammad Moneib                                                #
-# License: None                                                                #
 ################################################################################
 
 str=$1;

@@ -1,4 +1,14 @@
 #!/bin/bash
+################################################################################
+# Flip Cases for a String                                                      #
+#                                                                              #
+# Description: Does as the title says.                                         #
+#                                                                              #
+# Type: To be used as a standalone or sourced by other scripts.                #
+# Dependencies: Bash                                                           #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
+
 str=$1;
 if [[ -z $str ]]; then
   read str;

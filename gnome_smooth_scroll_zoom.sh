@@ -1,18 +1,27 @@
 #!/bin/bash
-###########################################################################################################
-# A script to magnify Gnome's screen based on the mouse wheel scrolling and several HW detection methods. #
-# The script modifies Gnome settings for the magnification. It forks a special process for mouse events   #
-# while keeping the original for keyboard events, which are more scarce and so, less process intensive.   #
-# Inter-process communication is minimal and limited to signalling in order to avoid writing into the     #
-# file system.                                                                                            #
-# The script is designed also to run as a startup background application. To do so, one should add an     #
-# exception in the sudoers file to allow sudo the script without a password. In that case, the script     #
-# should have execution and writing priviliges assigned only to root. Make sure to edit using visudo.     #
-#   example: your_username_here ALL=(ALL) NOPASSWD: /usr/bin/gnome_smooth_scroll_zoom.sh                  #
-# HW events detection is based on:                                                                        #
-#   libinput: based on the unrecommended debug output. Sluggish, excessive, and subject to change.        #
-# Developed by: Muhammad Moneib                                                                           #
-###########################################################################################################
+################################################################################
+# Gnome's Smooth Zoom by Mouse Scroll                                          #
+#                                                                              #
+# A script to magnify Gnome's screen based on the mouse wheel scrolling and    #
+# several HW detection methods. The script modifies Gnome settings for the     #
+# magnification. It forks a special process for mouse events while keeping the #
+# original for keyboard events, which are more scarce and so, less process     #
+# intensive. Inter-process communication is minimal and limited to signalling  #
+# in order to avoid writing into the file system. The script is designed also  #
+# to run as a startup background application. To do so, one should add an      #
+# exception in the sudoers file to allow sudo the script without a password.   #
+# In that case, the script should have execution and writing priviliges        #
+# assigned only to root. Make sure to edit using visudo.                       #
+#   example: your_username_here ALL=(ALL) NOPASSWD:                            #
+#     /usr/bin/gnome_smooth_scroll_zoom.sh                                     #
+# HW events detection is based on:                                             #
+#   libinput: based on the unrecommended debug output. Sluggish, excessive,    # 
+#     and subject to change.                                                   #
+#                                                                              #
+# Type: To be used as a standalone.                                            #
+# Dependencies: Bash, Gnome3, Fedora (for now).                                #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
 
 kbd=;
 magOnOff=false;
