@@ -1,0 +1,1 @@
+The following example shows how you can convert the first character of any string to uppercase by matching with a particular character.  Here, the first character is compared with ‘l’ and ‘h’ by the last two commands.

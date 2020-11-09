@@ -1,0 +1,4 @@
+str=$(for((i=0;i<${#target};i++)); do
+  printf ${target:$i:1}; 
+done | sed 's/\./_/g');
+echo "$str";
