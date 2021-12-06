@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#TODO Add intro.
+#TODO Add validation of options.
+
 function usage() {
   echo "USAGE: compound_interest.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here -p takeprofit_iterations_here -l stoploss_iterations_here [-v]"
   exit
@@ -44,6 +47,7 @@ if [ $verbosity == true ]; then
   echo
   echo "REPORT"
 fi
+
 currentIteration=1
 i=1
 referenceIteration=0 # Will indicate the current position.
@@ -53,8 +57,14 @@ while [ "$i" -le "$numberOfIterations" ]; do
    equation=$(echo "$amount*(1+$interestRate/$numberOfInterestApplicationPerIteration)^($numberOfInterestApplicationPerIteration*$currentIteration)")
    expectedValue=$(echo "scale=2;"$equation|bc -l)
    if [ $(echo "$expectedValue>$inputAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
-     referenceIteration=$i
+     if [ ! -z $lastDiff ] && [ $(echo "$lastDiff>=$expectedValue-$inputAmount"|bc) == 1 ]; then
+       referenceIteration=$i
+     else
+       referenceIteration=$((i-1))
+     fi
      break
+   else
+     lastDiff=$(echo "$inputAmount-$expectedValue"|bc)
    fi
    amount=$expectedValue
    ((i=i+1))
@@ -64,16 +74,15 @@ currentIteration=1
 i=1
 amount=$initialAmount
 while [ "$i" -le "$numberOfIterations" ]; do
-
    equation=$(echo "$amount*(1+$interestRate/$numberOfInterestApplicationPerIteration)^($numberOfInterestApplicationPerIteration*$currentIteration)")
    expectedValue=$(echo "scale=2;"$equation|bc -l)
    row="Iteration $i -- Expected Value: $expectedValue"
    if [ "$i" == "$referenceIteration" ]; then
-     print_text_with_color_and_background "$row" 7 4
+     print_text_with_color_and_background "$row" 7 246
    elif [ "$i" == $(("$referenceIteration"-"$stopLossIterations")) ]; then
-     print_text_with_color_and_background "$row" 7 1
+     print_text_with_color_and_background "$row" 7 196
    elif [ "$i" == $(("$referenceIteration"+"$takeProfitIterations")) ]; then
-     print_text_with_color_and_background "$row" 7 2
+     print_text_with_color_and_background "$row" 7 34
    else
      if [ $verbosity == true ]; then
        printf "$row\n"
