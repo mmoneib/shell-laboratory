@@ -21,6 +21,8 @@ Transforms the terminal into a canvas where text and color are the brushes. Perf
 Provides a workflow to track wealth building through compounded interest. The script can be adjusted to provde Stop Loss and Take Profit targets for each trade along the way.
 ####Credits Scroll
 Scroll the text of a file or piped input automatically from the bottom-up, in the manner of movie credits, in the viewable area of the opened terminal.
+####Tagger
+Add tags to anything and save the metadata in a file database for archiving purposes and easy retrieval of information.
 ###Sourced
 ####Check Option Parameters
 Manages the parsing of option parameters and their values.
