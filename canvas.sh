@@ -13,7 +13,6 @@
 # be achieved by hitting Space bar.                                            #
 #                                                                              #
 # Developer: Muhammad Moneib                                                   #
-# License: CC BY-SA                                                            #
 ################################################################################
 
 #TODO Add support to deleting by backspace and delete.
