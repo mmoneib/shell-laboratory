@@ -3,92 +3,101 @@
 #TODO Add intro.
 #TODO Add validation of options.
 
-function usage() {
-  echo "USAGE: compound_interest.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here -p takeprofit_iterations_here -l stoploss_iterations_here [-v]"
+# Namspaces: c for config, d for data, and o for output.
+
+function print_usage {
+  echo "USAGE: compouninterest.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here -p takeprofit_iterations_here -l stoploss_iterations_here -g leverageamount_here -o opposite_amount_here [-v]"
   exit
 }
 
-if [ -z $1 ]; then # Case of no options at all.
-  usage
-fi
+function calculate {
+  d_expectedValue=$(echo "scale=2;"$d_equation|bc -l)
+}
 
-verbosity=false
-while getopts "i:n:r:c:l:p:v" o; do
-  case "$o" in
-    i) initialAmount=$OPTARG ;;
-    n) numberOfIterations=$OPTARG ;;
-    r) interestRate=$OPTARG ;;
-    c) inputAmount=$OPTARG ;;
-    l) stopLossIterations=$OPTARG ;;
-    p) takeProfitIterations=$OPTARG ;;
-    v) verbosity=true ;;
-    *) usage ;;
-  esac
-done
+function set_equation {
+  d_equation="$d_amount*(1+$c_interestRate/$d_numberOfInterestApplicationPerIteration)^($d_numberOfInterestApplicationPerIteration*$d_timePeriod)"
+}
 
-source color_utilities__sourceable.sh
+function initialize_input {
+  if [ -z $1 ]; then # Case of no options at all.
+    print_usage
+  fi
+  c_verbosity=false
+  while getopts "i:n:r:c:l:p:v" o; do
+    case "$o" in
+      i) c_initialAmount=$OPTARG ;;
+      n) c_numberOfIterations=$OPTARG ;;
+      r) c_interestRate=$OPTARG ;;
+      c) c_inputAmount=$OPTARG ;;
+      l) c_stopLossIterations=$OPTARG ;;
+      p) c_takeProfitIterations=$OPTARG ;;
+      v) c_verbosity=true ;;
+      *) print_usage ;;
+    esac
+  done
+  source color_utilities__sourceable.sh # Sourcing before would hijack the input parameters.
+  d_numberOfInterestApplicationPerIteration=1 # Kept as 1 as I want to normalize the calculation with the time interval.
+  d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
+  d_amount=$c_initialAmount
+}
 
-if [ $verbosity == true ]; then
-  echo "Initial Amount: $initialAmount"
-  echo "Number of Iterations: $numberOfIterations"
-  echo "Interest Rate: $interestRate"
-fi
-
-currentIteration=$numberOfIterations
-numberOfInterestApplicationPerIteration=1 # Kept as 1 as I want to normalize the calculation with the time interval.
-equation=$(echo "$initialAmount*(1+$interestRate/$numberOfInterestApplicationPerIteration)^($numberOfInterestApplicationPerIteration*$numberOfIterations)")
-
-if [ $verbosity == true ]; then
-  echo "Equation of Compounded Interest: $equation"
-fi
-amountAfterIteration=$(echo  "scale=2;"$equation|bc -l)
-if [ $verbosity == true ]; then
-  echo "Amount after $currentIteration Iteration(s): $amountAfterIteration"
-  echo
-  echo "REPORT"
-fi
-
-currentIteration=1
-i=1
-referenceIteration=0 # Will indicate the current position.
-# This while loop is a duplicate from the one after and used only to get the reference iteration to allow formating the SL iteration which lies in the past. Redundant but cheap.
-amount=$initialAmount
-while [ "$i" -le "$numberOfIterations" ]; do
-   equation=$(echo "$amount*(1+$interestRate/$numberOfInterestApplicationPerIteration)^($numberOfInterestApplicationPerIteration*$currentIteration)")
-   expectedValue=$(echo "scale=2;"$equation|bc -l)
-   if [ $(echo "$expectedValue>$inputAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
-     if [ ! -z $lastDiff ] && [ $(echo "$lastDiff>=$expectedValue-$inputAmount"|bc) == 1 ]; then
-       referenceIteration=$i
+function process_data {
+  o_expectedValues=[]
+  set_equation
+  o_equation=$d_equation
+  calculate
+  o_amountAfterIteration=$d_expectedValue
+  d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
+  i=1
+  d_referenceIteration=0 # Will indicate the current position.
+  # This while loop is a duplicate from the one after and used only to get the reference iteration to allow formating the SL iteration which lies in the past. Redundant but cheap.
+  while [ "$i" -le "$c_numberOfIterations" ]; do
+     set_equation
+     calculate
+     o_expectedValues[$i]=$d_expectedValue
+     if  [ $d_referenceIteration -eq 0 ] && [ $(echo "$d_expectedValue>$c_inputAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
+       if [ $(echo "$lastDiff>=$d_expectedValue-$c_inputAmount"|bc) == 1 ]; then
+         d_referenceIteration=$i
+       else
+         d_referenceIteration=$((i-1))
+       fi
      else
-       referenceIteration=$((i-1))
+       lastDiff=$(echo "$c_inputAmount-$d_expectedValue"|bc)
      fi
-     break
-   else
-     lastDiff=$(echo "$inputAmount-$expectedValue"|bc)
-   fi
-   amount=$expectedValue
-   ((i=i+1))
-done
+     d_amount=$d_expectedValue # Why d_timePeriod is set to 1 above.
+     ((i=i+1))
+  done
+}
 
-currentIteration=1
-i=1
-amount=$initialAmount
-while [ "$i" -le "$numberOfIterations" ]; do
-   equation=$(echo "$amount*(1+$interestRate/$numberOfInterestApplicationPerIteration)^($numberOfInterestApplicationPerIteration*$currentIteration)")
-   expectedValue=$(echo "scale=2;"$equation|bc -l)
-   row="Iteration $i -- Expected Value: $expectedValue"
-   if [ "$i" == "$referenceIteration" ]; then
-     print_text_with_color_and_background "$row" 7 246
-   elif [ "$i" == $(("$referenceIteration"-"$stopLossIterations")) ]; then
-     print_text_with_color_and_background "$row" 7 196
-   elif [ "$i" == $(("$referenceIteration"+"$takeProfitIterations")) ]; then
-     print_text_with_color_and_background "$row" 7 34
-   else
-     if [ $verbosity == true ]; then
-       printf "$row\n"
+function send_output {
+  if [ $c_verbosity == true ]; then
+    echo "Initial Amount: $c_initialAmount"
+    echo "Number of Iterations: $c_numberOfIterations"
+    echo "Interest Rate: $c_interestRate"
+    echo "Equation of Compounded Interest: $o_equation"
+    echo "Amount after $c_numberOfIterations Iteration(s): $o_amountAfterIteration"
+    echo "******"
+    echo "REPORT"
+    echo "******"
+  fi
+  i=1
+  while [ "$i" -le "$c_numberOfIterations" ]; do
+     o_row="Iteration $i -- Expected Value: ${o_expectedValues[$i]}"
+     if [ "$i" == "$d_referenceIteration" ]; then
+       print_text_with_color_and_background "$o_row" 7 246 # White on grey
+     elif [ "$i" == $(("$d_referenceIteration"-"$c_stopLossIterations")) ]; then
+       print_text_with_color_and_background "$o_row" 7 196 # White on red
+     elif [ "$i" == $(("$d_referenceIteration"+"$c_takeProfitIterations")) ]; then
+       print_text_with_color_and_background "$o_row" 7 34 # White on green
+     else
+       if [ $c_verbosity == true ]; then
+         printf "$o_row\n"
+       fi
      fi
-   fi
-   amount=$expectedValue
-   ((i=i+1))
-done
+     ((i=i+1))
+  done
+}
 
+initialize_input $@
+process_data
+send_output
