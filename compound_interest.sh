@@ -23,14 +23,14 @@ function initialize_input {
     print_usage
   fi
   c_verbosity=false
-  while getopts "i:n:r:c:l:p:v" o; do
+  while getopts "i:r:n:l:p:c:v" o; do
     case "$o" in
       i) c_initialAmount=$OPTARG ;;
-      n) c_numberOfIterations=$OPTARG ;;
       r) c_interestRate=$OPTARG ;;
-      c) c_inputAmount=$OPTARG ;;
+      n) c_numberOfIterations=$OPTARG ;;
       l) c_stopLossIterations=$OPTARG ;;
       p) c_takeProfitIterations=$OPTARG ;;
+      c) c_inputAmount=$OPTARG ;;
       v) c_verbosity=true ;;
       *) print_usage ;;
     esac
@@ -82,16 +82,16 @@ function send_output {
   fi
   i=1
   while [ "$i" -le "$c_numberOfIterations" ]; do
-     o_row="Iteration $i -- Expected Value: ${o_expectedValues[$i]}"
+     row="Iteration $i -- Expected Value: ${o_expectedValues[$i]}"
      if [ "$i" == "$d_referenceIteration" ]; then
-       print_text_with_color_and_background "$o_row" 7 246 # White on grey
+       print_text_with_color_and_background "$row" 7 246 # White on grey
      elif [ "$i" == $(("$d_referenceIteration"-"$c_stopLossIterations")) ]; then
-       print_text_with_color_and_background "$o_row" 7 196 # White on red
+       print_text_with_color_and_background "$row" 7 196 # White on red
      elif [ "$i" == $(("$d_referenceIteration"+"$c_takeProfitIterations")) ]; then
-       print_text_with_color_and_background "$o_row" 7 34 # White on green
+       print_text_with_color_and_background "$row" 7 34 # White on green
      else
        if [ $c_verbosity == true ]; then
-         printf "$o_row\n"
+         printf "$row\n"
        fi
      fi
      ((i=i+1))
