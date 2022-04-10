@@ -99,7 +99,7 @@ initializeGnomeMagnifierSettings;
 tryToDetectKeyboard;
 # stdbuf is used to remove the buffering and allow detection of the continuous stream.
 # The & is for forking the child process as the mouse detection of libinput produces more events.
-(stdbuf -oL libinput debug-events | stdbuf -oL grep "POINTER_AXIS" | zoomMouseEventDetect)&  # 2nd script-specific sub-process as shown by echo "$BASHPID".
+(stdbuf -oL libinput debug-events | stdbuf -oL grep "POINTER_SCROLL_WHEEL" | zoomMouseEventDetect)&  # 2nd script-specific sub-process as shown by echo "$BASHPID".
 stdbuf -oL libinput debug-events $kbd --show-keycodes | stdbuf -oL grep "KEY_LEFTALT" | zoomKeyboardEventDetect; # Main (top) process as shown by echo $$.
 
 #TODO Add hot support for lense mode.
