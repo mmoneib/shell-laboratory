@@ -1,20 +1,42 @@
 #!/bin/bash
-
-#TODO Add intro.
-#TODO Add validation of options.
-
 ################################################################################
 # Wealth Ladder                                                                #
 #                                                                              #
 # A wealth building tool through gradual, defined, small steps of compounded   #
 # interest, taking into consideration the human psychology and the need for    # 
 # risk control, all calculated and visualized in a convenient way.             #
+#                                                                              #
+# Type: Process.                                                               #
+# Dependencies: Unix-like Shell (tested with Bash)                             #
+# Developed by: Muhammad Moneib                                                #
 ################################################################################
 
 # Namspaces: c for config, d for data, and o for output.
 
+usage="Usage: wealth_ladder.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here [-c notional_amount_here] [-p takeprofit_iterations_here] [-l stoploss_iterations_here] [-g leveraged_amount_here] [-o exchange_rate_here] [-v]"
+help="A simple investment mathematical plan through compounded interest accumulation based on the user's arguments. The plan is meant only to be used as a mathematical reference and not as a financial advice.
+Arguments:
+\tMandatory
+\t-i: The initial notional amount at the start of the investment plan.
+\t-n: The number of time periods during the planned investment at the beginning of which the interest would be applied.
+\t-r: The fixed interest rate.
+\t-c: The notional amount of the current trade.
+\tOptional
+\t-p: The number of step after which the current trade should be closed to take profit.
+\t-l: The number of step after which the current trade should be closed to stop loss.
+\t-g: The leveraged amount at the initial investment.
+\t-o: The opposite amount in the quote currency at the initial investment.
+\t-v: Show all the steps and details. Without, a minimalist output will show only the current step, the TP step, if enabled, and the SL step, if enabled.\n"
+
 function print_usage {
-  echo "USAGE: wealth_ladder.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here [-c notional_amount_here] [-p takeprofit_iterations_here] [-l stoploss_iterations_here] [-g leveraged_amount_here] [-o exchange_rate_here] [-v]"
+  echo "$usage"
+  echo "Try 'wealth_ladder.sh -h' for more information."
+  exit
+}
+
+function print_help {
+  echo "$usage"
+  printf "$help"
   exit
 }
 
@@ -31,7 +53,7 @@ function initialize_input {
     print_usage
   fi
   c_verbosity=false
-  while getopts "i:r:n:l:p:c:o:g:v" o; do
+  while getopts "i:r:n:l:p:c:o:g:vh" o; do
     case "$o" in
       i) c_initialAmount=$OPTARG ;;
       r) c_interestRate=$OPTARG ;;
@@ -42,6 +64,7 @@ function initialize_input {
       o) c_inputOppositeAmount=$OPTARG ;;
       g) c_leveregedAmount=$OPTARG ;;
       v) c_verbosity=true ;;
+      h) print_help ;;
       *) print_usage ;;
     esac
   done
@@ -59,6 +82,7 @@ function initialize_input {
 
 function process_data {
   o_expectedValues=[]
+  o_overallProfits=[]
   if [ ! -z "$c_inputOppositeAmount" ]; then
     exchangeRate=$(echo "scale=6;$c_inputOppositeAmount/$c_inputAmount"|bc -l)
   fi
@@ -79,8 +103,10 @@ function process_data {
      #TODO Add step profit and overall profit as differential amount.
      if [ ! -z $leverageFactor ]; then
        o_expectedValues[$i]=$(echo "scale=6;$d_expectedValue*$leverageFactor"|bc -l)
+       o_overallProfits[$i]=$(echo "scale=6;(${o_expectedValues[$i]}/$leverageFactor)-$c_initialAmount"|bc -l)
      else
        o_expectedValues[$i]=$d_expectedValue
+       o_overallProfits[$i]=$(echo "scale=6;${o_expectedValues[$i]}-$c_initialAmount"|bc -l)
      fi
      if [ ! -z "$exchangeRate" ]; then
        #TODO Factorize
@@ -126,6 +152,7 @@ function send_output {
      if [ ! -z "$o_exchangeRate" ]; then
        row="$row -- Opposite Value: ${o_oppositeValues[$i]}"
      fi
+     row="$row -- Overall Profit: ${o_overallProfits[$i]}"
      if [ "$i" == "$o_referenceIteration" ]; then
        print_text_with_color_and_background "$row" 7 246 # White on grey
      elif [ ! -z "$c_stopLossIterations" ] && [ "$i" == $(("$o_referenceIteration"-"$c_stopLossIterations")) ]; then
