@@ -38,7 +38,8 @@ Arguments:
 \t-l: The number of step after which the current trade should be closed to stop loss. Requires c.
 \t-g: The leveraged amount in the notional currency at the current investment. Requires c.
 \t-o: The opposite amount in the quote currency at the current investment. Requires c.
-\t-v: Show all the steps and details. Without, a minimalist output will show only the current step, the TP step, if enabled, and the SL step, if enabled.\n"
+\t-v: Show all the steps and details. Without, a minimalist output will show only the current step, the TP step, if enabled, and the SL step, if enabled.
+\t-w: Raw output in the form of KEY,VALUE instead of pretty printed. \n"
 
 function print_usage {
   echo "$usage"
@@ -52,22 +53,12 @@ function print_help {
   exit
 }
 
-function calculate_expected_value {
-  d_expectedValue=$(echo "scale=6;"$d_equation|bc -l)
-}
-
-function set_compound_interest_equation {
-  d_equation="$d_amount*(1+$c_interestRate/$d_numberOfInterestApplicationPerIteration)^($d_numberOfInterestApplicationPerIteration*$d_timePeriod)"
-}
-
-#TODO: Limit leakage of namespace variables.
-
 function initialize_input {
   if [ -z $1 ]; then # Case of no options at all.
     print_usage
   fi
   c_verbosity=false
-  while getopts "i:r:n:l:p:c:o:g:vh" o; do
+  while getopts "i:r:n:l:p:c:o:g:vhw" o; do
     case "$o" in
       i) c_initialAmount=$OPTARG ;;
       r) c_interestRate=$OPTARG ;;
@@ -78,6 +69,7 @@ function initialize_input {
       o) c_currentOppositeAmount=$OPTARG ;;
       g) c_currentLeveragedAmount=$OPTARG ;;
       v) c_verbosity=true ;;
+      w) c_isRawOutput=true ;;
       h) print_help ;;
       *) print_usage ;;
     esac
@@ -88,75 +80,73 @@ function initialize_input {
   if [ -z $c_currentAmount ]; then
     c_currentAmount=$c_initialAmount
   fi
-
   d_numberOfInterestApplicationPerIteration=1 # Kept as 1 as I want to normalize the calculation with the time interval.
-  d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
+  d_timePeriod=$c_numberOfIterations # Since we will reapply the calculation for each iteration, we only need one time period.
   d_amount=$c_initialAmount
+}
 
+function get_expected_value_equation {
+  echo "$d_amount*(1+$c_interestRate*$leverageFactor/$d_numberOfInterestApplicationPerIteration)^($d_numberOfInterestApplicationPerIteration*$d_timePeriod)"
 }
 
 function process_data {
   o_expectedValues=[]
   o_overallProfits=[]
-  if [ ! -z "$c_currentOppositeAmount" ]; then
-    exchangeRate=$(echo "scale=6;$c_currentOppositeAmount/$c_currentAmount"|bc -l)
-  fi
-  set_compound_interest_equation
-  o_equation=$d_equation
-  calculate_expected_value
-  o_amountAfterIteration=$d_expectedValue
   if [ ! -z "$c_currentAmount" ] && [ ! -z "$c_currentLeveragedAmount" ]; then
     leverageFactor=$(echo "scale=2;$c_currentLeveragedAmount/$c_currentAmount"|bc -l)
+  else
+    leverageFactor=1 # Better to avoid branching in the code.
+  fi
+  d_expectedValueEquation=$(get_expected_value_equation)
+  o_equation=$d_expectedValueEquation # For printing purposes.
+  o_amountAfterIteration=$(echo "scale=6;$d_expectedValueEquation"|bc -l)
+  if [ ! -z "$c_currentAmount" ] && [ ! -z "$c_currentOppositeAmount" ]; then
+    if [ "$leverageFactor" != "1" ]; then
+      factor=$c_currentLeveragedAmount
+    else
+      factor=$c_currentAmount
+    fi
+    exchangeRate=$(echo "scale=6;$c_currentOppositeAmount/$factor"|bc -l)
   fi
   d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
   i=1
-  d_referenceIteration=0 # Will indicate the current position.
-  lastDiff=0
+  d_referenceCurrentIteration=0 # Will indicate the current position.
+  currentMinusPreviousAmount=0
   while [ "$i" -le "$c_numberOfIterations" ]; do
-     set_compound_interest_equation
-     calculate_expected_value
-     #TODO Add step profit and overall profit as differential amount.
-     if [ ! -z $leverageFactor ]; then
-       o_expectedValues[$i]=$(echo "scale=6;$d_expectedValue*$leverageFactor"|bc -l)
-       o_overallProfits[$i]=$(echo "scale=6;(${o_expectedValues[$i]}/$leverageFactor)-$c_initialAmount"|bc -l)
-     else
-       o_expectedValues[$i]=$d_expectedValue
-       o_overallProfits[$i]=$(echo "scale=6;${o_expectedValues[$i]}-$c_initialAmount"|bc -l)
-     fi
+     d_expectedValueEquation=$(get_expected_value_equation)
+     d_expectedValue=$(echo "scale=6;$d_expectedValueEquation"|bc -l)
+     o_expectedValues[$i]=$d_expectedValue
+     o_overallProfits[$i]=$(echo "scale=6;($d_expectedValue)-$c_initialAmount"|bc -l)
      if [ ! -z "$exchangeRate" ]; then
-       #TODO Factorize
-       if [ ! -z $leverageFactor ]; then
-         o_oppositeValues[$i]=$(echo "scale=6;$d_expectedValue*$exchangeRate*$leverageFactor"|bc -l)
-       else
-         o_oppositeValues[$i]=$(echo "scale=6;$d_expectedValue*$exchangeRate"|bc -l)
-       fi
+       factor="$exchangeRate*$leverageFactor"
+       o_oppositeValues[$i]=$(echo "scale=6;$d_expectedValue*$factor"|bc -l)
      fi
-     if [ $d_referenceIteration -eq 0 ] && [ $(echo "$d_expectedValue>$c_currentAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
-       if [ $(echo "$lastDiff>=$d_expectedValue-$c_currentAmount"|bc) == 1 ]; then
-         d_referenceIteration=$i
+     if [ $d_referenceCurrentIteration -eq 0 ] && [ $(echo "$d_expectedValue>$c_currentAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
+       if [ $(echo "$currentMinusPreviousAmount>=$d_expectedValue-$c_currentAmount"|bc) == 1 ]; then #
+         d_referenceCurrentIteration=$i
        else
-         d_referenceIteration=$((i-1))
+         d_referenceCurrentIteration=$((i-1))
        fi
      else
-       lastDiff=$(echo "$c_currentAmount-$d_expectedValue"|bc)
+       currentMinusPreviousAmount=$(echo "$c_currentAmount-$d_expectedValue"|bc)
      fi
-     d_amount=$d_expectedValue # Why d_timePeriod is set to 1 above.
+     d_amount=$d_expectedValue # Reason why d_timePeriod is set to 1 above.
      ((i=i+1))
   done
-  o_referenceIteration=$d_referenceIteration
-  o_exchangeRate="$exchangeRate"
+  o_referenceCurrentIteration=$d_referenceCurrentIteration
+  o_exchangeRate=$exchangeRate
   o_leverageFactor=$leverageFactor
 }
 
-function send_output {
+function pretty_output {
   if [ $c_verbosity == true ]; then
     echo "Initial Amount: $c_initialAmount"
     echo "Number of Iterations: $c_numberOfIterations"
     echo "Interest Rate: $c_interestRate"
+    echo "Leverage Factor: $o_leverageFactor""X"
     echo "Equation of Compounded Interest: $o_equation"
     echo "Amount after $c_numberOfIterations Iteration(s): $o_amountAfterIteration"
     [ ! -z $o_exchangeRate ] && echo "Exchange Rate: $o_exchangeRate"
-    [ ! -z $o_leverageFactor ] && echo "Leverage Factor: $o_leverageFactor""X"
     echo "******"
     echo "REPORT"
     echo "******"
@@ -165,17 +155,17 @@ function send_output {
   while [ "$i" -le "$c_numberOfIterations" ]; do
      row="Iteration $i -- Expected Value: ${o_expectedValues[$i]}"
      if [ ! -z "$o_exchangeRate" ]; then
-       row="$row -- Opposite Value: ${o_oppositeValues[$i]}"
+       row="$row -- Opposite Leveraged Value: ${o_oppositeValues[$i]}"
      fi
      row="$row -- Overall Profit: ${o_overallProfits[$i]}"
-     if [ "$i" == "$o_referenceIteration" ]; then
+     if [ "$i" == "$o_referenceCurrentIteration" ]; then
        print_text_with_color_and_background "$row" 7 246 # White on grey
-     elif [ ! -z "$c_stopLossIterations" ] && [ "$i" == $(("$o_referenceIteration"-"$c_stopLossIterations")) ]; then
+     elif [ ! -z "$c_stopLossIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"-"$c_stopLossIterations")) ]; then
        print_text_with_color_and_background "$row" 7 196 # White on red
-     elif [ ! -z "$c_takeProfitIterations" ] && [ "$i" == $(("$o_referenceIteration"+"$c_takeProfitIterations")) ]; then
+     elif [ ! -z "$c_takeProfitIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"+"$c_takeProfitIterations")) ]; then #TODO Calc should move to processing.
        print_text_with_color_and_background "$row" 7 34 # White on green
      else
-       if [ $c_verbosity == true ] || [ "$i" == $(("$o_referenceIteration"-"$c_stopLossIterations")) ] || [ "$i" == $(("$o_referenceIteration"+"$c_takeProfitIterations")) ]; then
+       if [ $c_verbosity == true ] || [ "$i" == $(("$o_referenceCurrentIteration"-"$c_stopLossIterations")) ] || [ "$i" == $(("$o_referenceCurrentIteration"+"$c_takeProfitIterations")) ]; then
          printf "$row\n"
        fi
      fi
@@ -183,6 +173,31 @@ function send_output {
   done
 }
 
+# TODO Escape commas or use generic separator
+function raw_output {
+  echo "leverageFactor,$o_leverageFactor"
+  echo "equation,$o_equation"
+  echo "amountAfterIteration,$o_amountAfterIteration"
+  echo "exchangeRate,$o_exchangeRate"
+  for (( i=0;i<=${#o_oppositeValues[@]};i++ )); do
+    echo "expectedValues[$i],${o_expectedValues[i]}"
+  done
+  for (( i=0;i<=${#o_oppositeValues[@]}; i++ )); do
+    echo "oppositeValues[$i],${o_oppositeValues[i]}"
+  done
+  for (( i=0;i<=${#o_oppositeValues[@]}; i++ )); do
+    echo "overallProfits[$i],${o_overallProfits[i]}"
+  done
+}
+
+function output {
+  if [ $c_isRawOutput ]; then
+    raw_output
+  else
+    pretty_output
+  fi
+}
+
 initialize_input $@
 process_data
-send_output
+output
