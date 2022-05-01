@@ -179,13 +179,13 @@ function raw_output {
   echo "equation,$o_equation"
   echo "amountAfterIteration,$o_amountAfterIteration"
   echo "exchangeRate,$o_exchangeRate"
-  for (( i=0;i<=${#o_oppositeValues[@]};i++ )); do
+  for (( i=0;i<${#o_expectedValues[@]};i++ )); do
     echo "expectedValues[$i],${o_expectedValues[i]}"
   done
-  for (( i=0;i<=${#o_oppositeValues[@]}; i++ )); do
+  for (( i=0;i<${#o_oppositeValues[@]}; i++ )); do
     echo "oppositeValues[$i],${o_oppositeValues[i]}"
   done
-  for (( i=0;i<=${#o_oppositeValues[@]}; i++ )); do
+  for (( i=0;i<${#o_overallProfits[@]}; i++ )); do
     echo "overallProfits[$i],${o_overallProfits[i]}"
   done
 }
