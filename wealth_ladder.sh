@@ -6,7 +6,7 @@
 # interest, taking into consideration the human psychology and the need for    # 
 # risk control, all calculated and visualized in a convenient way.             #
 #                                                                              #
-# Type: Process.                                                               #
+# Type: Progressive Process.                                                   #
 # Dependencies: Unix-like Shell (tested with Bash), and                        #
 #     color_utilities__sourceable.sh.                                          #
 # Developed by: Muhammad Moneib                                                #
@@ -44,7 +44,7 @@ Arguments:
 function print_usage {
   echo "$usage"
   echo "Try 'wealth_ladder.sh -h' for more information."
-  exit
+  exit 1
 }
 
 function print_help {

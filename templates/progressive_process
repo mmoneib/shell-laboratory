@@ -1,0 +1,64 @@
+#!/bin/sh
+################################################################################
+# ~title of script here!~                                                      #
+#                                                                              #
+# ~description of script here~                                                 #
+#                                                                              #
+# Type: Progressive Process.                                                   #
+# Dependencies: Unix-like Shell (tested with Bash)                             #
+#     ~additional dependenies here~                                            #
+# Developed by: Muhammad Moneib                                                #
+################################################################################
+
+# Namspaces: c for config, d for data, and o for output.
+
+~sourcing from anywhere mechanism here~
+
+usage=~usage text here~
+help=~help text here~
+
+function print_usage {
+  echo "$usage"
+  echo "Try '~script name here~.sh -h' for more information."
+  exit 1
+}
+
+function print_help {
+  echo "$usage"
+  printf "$help"
+  exit
+}
+
+function initialize_input {
+  if [ -z $1 ]; then # Case of no options at all.
+    print_usage
+  fi
+  ~options parsing and c_ variables initialization here~
+  ~options validation here~
+  ~d_ variables initialization here~
+}
+
+function process_data {
+  ~processing of date here~
+  ~o_ variables initialization here~
+}
+
+function pretty_output {
+  ~human readable and formatted output here~
+}
+
+function raw_output {
+  ~plain data structural output here~
+}
+
+function output {
+  if [ $c_isRawOutput ]; then
+    raw_output
+  else
+    pretty_output
+  fi
+}
+
+initialize_input $@
+process_data
+output
