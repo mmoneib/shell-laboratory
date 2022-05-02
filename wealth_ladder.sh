@@ -14,6 +14,8 @@
 
 # Namspaces: c for config, d for data, and o for output.
 
+#TODO Review order of options.
+
 # Sourcing from anywhere.
 scriptFile=$0
 followedScriptFile=$(readlink $scriptFile)
