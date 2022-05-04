@@ -7,7 +7,7 @@
 # risk control, all calculated and visualized in a convenient way.             #
 #                                                                              #
 # Type: Progressive Process.                                                   #
-# Dependencies: Unix-like Shell (tested with Bash), and                        #
+# Dependencies: Unix-like Shell (tested with Bash)                             #
 #     color_utilities__sourceable.sh.                                          #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################

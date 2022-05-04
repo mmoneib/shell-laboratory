@@ -2,7 +2,7 @@
 ################################################################################
 # ~title of script here!~                                                      #
 #                                                                              #
-# ~description of script here~                                                 #
+# ~ectensive description of script here~                                       #
 #                                                                              #
 # Type: Progressive Process.                                                   #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -12,7 +12,15 @@
 
 # Namspaces: c for config, d for data, and o for output.
 
-~sourcing from anywhere mechanism here~
+# Sourcing from anywhere.
+scriptFile=$0
+followedScriptFile=$(readlink $scriptFile)
+while [ ! -z $followedScriptFile ]; do
+  scriptFile=$followedScriptFile
+  followedScriptFile=$(readlink "$followedScriptFile")
+done
+scriptPath=$(dirname $scriptFile)
+source "$scriptPath/"~sourced script name here~.sh "skip_run" # The parameter skips initialization output.
 
 usage=~usage text here~
 help=~help text here~
