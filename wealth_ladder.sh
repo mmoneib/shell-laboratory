@@ -167,7 +167,7 @@ function pretty_output {
      elif [ ! -z "$c_takeProfitIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"+"$c_takeProfitIterations")) ]; then #TODO Calc should move to processing.
        print_text_with_color_and_background "$row" 7 34 # White on green
      else
-       if [ $c_verbosity == true ] || [ "$i" == $(("$o_referenceCurrentIteration"-"$c_stopLossIterations")) ] || [ "$i" == $(("$o_referenceCurrentIteration"+"$c_takeProfitIterations")) ]; then
+       if [ $c_verbosity == true ]; then
          printf "$row\n"
        fi
      fi
