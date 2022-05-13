@@ -12,7 +12,7 @@
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
 
-usage="Usage: ./~script name here.sh~ -a action_name_here ~additional optional actions here~ ~repitition~"
+usage="Usage: $(basename $0) -a action_name_here ~additional optional actions here~ ~repitition~"
 help="~description of script here~.
   Parameters:
     ~parameter character here~ -> ~description of parameter here~.
@@ -41,7 +41,7 @@ function print_help {
   exit
 }
 
-function magnify_text {
+function function_name {
   [ -z ~parameter variable here~ ] && ~parameter variable here~="~function positional parameter here~"
   ~action implementation here~
 }
