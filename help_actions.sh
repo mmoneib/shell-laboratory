@@ -1,8 +1,8 @@
 #!/bin/sh
 ################################################################################
-# ~title of script here~                                                      #
+# Help Actions                                                                 #
 #                                                                              #
-# ~extensive description of script here~                                       #
+# Actions to analyze code and display help and documentation accordingly.      #
 #                                                                              #
 # Type: Actions            .                                                   #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -12,15 +12,19 @@
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
 
-u="Usage: $(basename $0) -a action_name_here ~additional optional actions here~ ~repitition~"
+usage="Usage: $(basename $0) -a action_name_here ~additional optional actions here~ ~repitition~"
 
-function print_usage {
-  echo $u
+## Print the usage statement. 
+function print_actions_usage {
+  echo "$usage"
   exit 1
 }
 
-function print_help {
- echo "$u"
+## Printed extended help include basic general usage, available actions, and their required parameters.
+function print_actions_help {
+ [ -z $text ] && text="$1"
+ [ -z $text ] && text=$(basename $0)
+ echo "$usage"
  aht=""
   while read l; do
     if [ "${l:0:2}" == "##" ]; then
@@ -33,8 +37,8 @@ function print_help {
       ca=""
       cd=""
     fi  
-  done <<< "$(grep '^function' -B1 $(basename $0) |grep '##' -A1)"
-  f="$(cat $(basename $0))"
+  done <<< "$(grep '^function' -B1 $text|grep '##' -A1)"
+  f="$(cat $text)"
   dht=""
   for ((ln=5;ln<10;ln++)); do
     pl="$(echo "$f"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
@@ -60,24 +64,15 @@ ${aht:0:$((${#aht}-2))}
   exit
 }
 
-## ~comment describing the action here~
-function ~action function name here~ {
-  [ -z ~parameter variable here~ ] && ~parameter variable here~="~function positional parameter here~"
-  ~action implementation here~
-}
-
-~repitition~
-
 if [ "$1" != "skip_run" ]; then
-  while getopts "~getopts parameter string here~" o; do
+  while getopts "a:t:h" o; do
     case $o in
       a) action=$OPTARG ;;
-      ~parameter character here~) ~parameter variable here~=$OPTARG ;;
-      ~repitition~
-      h) print_help ;;
-      *) print_usage ;;
+      t) text=$OPTARG ;;
+      h) print_actions_help ;;
+      *) print_actions_usage ;;
     esac
   done
   # Generic action call with positional parameters based on available ones.
-  $action ~parameter variable here~ ~repitition~
+  $action $text
 fi
