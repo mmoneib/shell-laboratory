@@ -12,67 +12,78 @@
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
 
-usage="Usage: $(basename $0) -a action_name_here ~additional optional actions here~ ~repitition~"
-
-## Print the usage statement. 
+## Print the usage statement without exiting.
 function print_actions_usage {
-  echo "$usage"
+ [ -z $p_r_fileContent ] && p_r_fileContent="$1"
+ [ -z $p_r_fileContent ] && p_r_fileContent="$(basename $0)"
+ function __print_usage {
+   grep "$1" $p_r_fileContent |grep -v "grep -v"|sed s/\).*\#\#\ /\ /g|sed s/^\ *[\ ]/-/g |tr "\n" " "|sed s/\ $//g 
+ }
+ requiredOptionsText="$(__print_usage ')\ p_r_')"
+ optionalOptionsText="$(__print_usage ')\ p_o_')"
+ echo "Usage: $p_r_fileContent $requiredOptionsText [$optionalOptionsText]"|sed s/\\[\\]//g
+}
+
+## Print the usage statement while exiting.
+function print_actions_usage_exiting {
+ [ -z $p_r_fileContent ] && p_r_fileContent="$1"
+ [ -z $p_r_fileContent ] && p_r_fileContent="$(basename $0)"
+  print_actions_usage
   exit 1
 }
 
 ## Printed extended help include basic general usage, available actions, and their required parameters.
 function print_actions_help {
- [ -z $text ] && text="$1"
- [ -z $text ] && text=$(basename $0)
- echo "$usage"
- aht=""
+  [ -z $p_r_fileContent ] && p_r_fileContent="$1"
+  [ -z $p_r_fileContent ] && p_r_fileContent=$(basename $0)
+  print_actions_usage
+  actionsListText=""
   while read l; do
     if [ "${l:0:2}" == "##" ]; then
-      ca="${l:2:${#l}}"
+      funcDesc="${l:2:${#l}}"
     elif [ "${l:0:8}" == "function" ]; then
-      cd="$(echo $l|sed s/function\ //g|sed s/\ \{//g)"
-      if [ ! -z "$ca" ] && [ ! -z "$cd" ]; then
-        aht+="\t\t$cd -> $ca\n"
+      funcName="$(echo $l|sed s/function\ //g|sed s/\ \{//g)"
+      if [ ! -z "$funcDesc" ] && [ ! -z "$funcName" ]; then
+        actionsListText+="\t\t$funcName -> $funcDesc\n"
       fi  
-      ca=""
-      cd=""
+      funcDesc=""
+      funcName=""
     fi  
-  done <<< "$(grep '^function' -B1 $text|grep '##' -A1)"
-  f="$(cat $text)"
-  dht=""
-  for ((ln=5;ln<10;ln++)); do
-    pl="$(echo "$f"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
-    dht+="$pl"
-    [ " " == "$pl" ] && break
-  done
-  h="$(echo "$f"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g): $dht
+  done <<< "$(grep '^function' -B1 $p_r_fileContent|grep '##' -A1)"
+  fileText="$(cat $p_r_fileContent)"
+  descriptionText=""
+  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
+    potentialDesciptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
+    [ " " == "$potentialDescriptionLine" ] && break
+    descriptionText+="$potentialDescriptionLine"
+ done
+ helpText="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g): $descriptionText
 \tParameters:
 \t\t~parameter character here~ -> ~description of parameter here~.
 \t\t~repition~
 \tActions
-${aht:0:$((${#aht}-2))}
+${actionsListText:0:$((${#actionsListText}-2))}
 \tAction/Parameter Matrix:
 \t\t===========================================================================
 \t\t| Action / Parameter          | ~parameter character here! | ~repitition~ |
 \t\t===========================================================================
 \t\t| ~action function name here~ | ~asterisk if used here~    | ~repitition~ |
 \t\t---------------------------------------------------------------------------
-\t\t| ~repitiition~               | ~repitiition~              | ~repitiition~|
+\t\t| ~repitiition~               | ~repitiition~              | ~repitition~ |
 \t\t---------------------------------------------------------------------------
 "
-  printf "$h"
+  printf "$helpText"
   exit
 }
 
-if [ "$1" != "skip_run" ]; then
-  while getopts "a:t:h" o; do
-    case $o in
-      a) action=$OPTARG ;;
-      t) text=$OPTARG ;;
-      h) print_actions_help ;;
-      *) print_actions_usage ;;
-    esac
-  done
-  # Generic action call with positional parameters based on available ones.
-  $action $text
-fi
+while getopts "a:t:h" o; do
+  case $o in
+    a) p_r_action=$OPTARG ;; ## action_name_here
+    t) p_r_fileContent=$OPTARG $p_r_file_content ;; ## file_to_help_here
+    h) print_actions_help ;;
+    *) print_actions_usage_exiting ;;
+  esac
+done
+[ -z $1 ] && print_actions_usage_exiting
+# Generic action call with positional parameters based on available ones.
+$p_r_action $p_r_fileContent
