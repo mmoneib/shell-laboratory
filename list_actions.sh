@@ -50,9 +50,12 @@ if [ "$1" != "skip_run" ]; then
   fi
   while getopts "a:t:n:h" o; do
     case $o in
-      a) p_r_action=$OPTARG ;; ## action_name_here
-      n) p_o_lineNumber=$OPTARG ;; ## line_number_here
-      t) p_r_text=$OPTARG ;; ## text_here
+      ## The name of the function to be triggered.
+      a) p_r_action=$OPTARG ;;
+      ## The number of the line within a text made of lines.
+      n) p_o_lineNumber=$OPTARG ;;
+      ## The text to be treated as a list.
+      t) p_r_text=$OPTARG ;;
       h) print_help ;;
       *) print_usage ;;
     esac
