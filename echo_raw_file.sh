@@ -14,7 +14,7 @@
 ################################################################################
 
 source check_option_parameter__sourced.sh;
-source depth_first_search__sourceable.sh;
+source depth_first_search_utility.sh;
 
 declare -A childrenMap; # Hashmap
 declare -A repetitionMap; # Hashmap

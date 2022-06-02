@@ -75,13 +75,3 @@ while read -rsn1 inp; do
       horPos=$(($horPos+1));
     esac
 done
-
-
-#Source: https://unix.stackexchange.com/questions/179191/bashscript-to-detect-right-arrow-key-being-pressed.
-#https://unix.stackexchange.com/questions/181937/how-create-a-temporary-file-in-shell-script
-
-Association is no reason for being guilty or proud.
-Text Columnizer: Bash script to display text as columns on the screen or in a file.
-https://www.tecmint.com/extend-and-reduce-lvms-in-linux/
-One must fight the urge to talk to idiots.
-

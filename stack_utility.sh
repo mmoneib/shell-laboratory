@@ -5,7 +5,7 @@
 # A simple stack implementation with the pointer pointing to the space above   #
 # the top-most element.                                                        # 
 #                                                                              #
-# Type: To be used as a standalone or sourced by other scripts.                #
+# Type: Utility.                                                               #
 # Dependencies: Bash                                                           #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
