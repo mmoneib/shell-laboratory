@@ -38,6 +38,14 @@ function print_actions_help {
   [ -z "$p_r_fileContent" ] && p_r_fileContent="$1"
   [ -z "$p_r_fileContent" ] && p_r_fileContent=$(basename $0)
   print_actions_usage
+  fileText="$(cat $p_r_fileContent)"
+  title="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g)"
+  descriptionText=""
+  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
+    potentialDescriptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
+    [ " " == "$potentialDescriptionLine" ] && break
+    descriptionText+="$potentialDescriptionLine"
+  done
   requiredParamsListText=""
   while read l; do
     [ -z "$description" ] && description="$l" && continue
@@ -52,7 +60,7 @@ function print_actions_help {
     [ -z "$parameter" ] && parameter="$l" && optionalParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
   done <<< "$(grep -v "grep" $p_r_fileContent|grep -B1 ") p_o_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
   [ ! -z "$optionalParamsListText" ] && optionalParamsListText="\n\tOptional Parameters:\n${optionalParamsListText:0:$((${#optionalParamsListText}-2))}"
-  actionsListText=""
+  actionsListText="\n\tActions:\n"
   while read l; do
     if [ "${l:0:2}" == "##" ]; then
       funcDesc="${l:2:${#l}}"
@@ -65,33 +73,25 @@ function print_actions_help {
       funcName=""
     fi  
   done <<< "$(grep '^function' -B1 $p_r_fileContent|grep '##' -A1)"
-  fileText="$(cat $p_r_fileContent)"
-  descriptionText=""
-  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
-    potentialDesciptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
-    [ " " == "$potentialDescriptionLine" ] && break
-    descriptionText+="$potentialDescriptionLine"
- done
- actionParamMatrix="\tAction/Parameter Matrix:\n"
- while read l; do
-   #echo "${l:0:8}"
-   if [ "${l:0:8}" == "function" ] && [ "${l:0:11}" != "function __" ]; then
-     func="$(echo $l|sed "s/\(^function \)\(.*\)\( {.*\)/\2/g")"
-     [ ! -z "$func" ] && actionParamMatrix+="\t\t$func --> "
-   elif [ "${l:0:9}"  == "[ -z \"\$p_" ]; then
-     param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._.*\)\(\" \].*\)/\2/g")"
-     param="$(grep ".) $param" $p_r_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
-     [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
-   elif [ "$l" == "}" ]; then
-     [ ! -z "$func" ] && actionParamMatrix=${actionParamMatrix:0:$((${#actionParaMatrix}-1))}"\n"
-     func=""
-     param=""
-  fi
- done <<< "$(cat $p_r_fileContent)"
- helpText="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g): $descriptionText$requiredParamsListText$optionalParamsListText
-\tActions:
-${actionsListText:0:$((${#actionsListText}-2))}
-${actionParamMatrix:0:$((${#actionParamMatrix}-2))}
+  actionListText=${actionsListText:0:$((${#actionsListText}-2))}
+  actionParamMatrix="\tAction/Parameter Matrix:\n"
+  while read l; do
+    #echo "${l:0:8}"
+    if [ "${l:0:8}" == "function" ] && [ "${l:0:11}" != "function __" ]; then
+      func="$(echo $l|sed "s/\(^function \)\(.*\)\( {.*\)/\2/g")"
+      [ ! -z "$func" ] && actionParamMatrix+="\t\t$func --> "
+    elif [ "${l:0:9}"  == "[ -z \"\$p_" ]; then
+      param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._.*\)\(\" \].*\)/\2/g")"
+      param="$(grep ".) $param" $p_r_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
+      [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
+    elif [ "$l" == "}" ]; then
+      [ ! -z "$func" ] && actionParamMatrix=${actionParamMatrix:0:$((${#actionParaMatrix}-1))}"\n"
+      func=""
+      param=""
+   fi
+ done <<< "$fileText"
+actionParamMatrix=${actionParamMatrix:0:$((${#actionParamMatrix}-2))}
+helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText$actionsListText$actionParamMatrix
 "
   printf "$helpText"
   exit
