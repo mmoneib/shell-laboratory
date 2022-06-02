@@ -14,8 +14,8 @@
 
 ## Print the usage statement without exiting.
 function print_actions_usage {
- [ -z $p_r_fileContent ] && p_r_fileContent="$1"
- [ -z $p_r_fileContent ] && p_r_fileContent="$(basename $0)"
+ [ -z "$p_r_fileContent" ] && p_r_fileContent="$1"
+ [ -z "$p_r_fileContent" ] && p_r_fileContent="$(basename $0)"
  function __print_usage {
    #grep "$1" $p_r_fileContent |grep -v "grep -v"|sed s/\).*\#\#\ /\ /g|sed s/^\ *[\ ]/-/g |tr "\n" " "|sed s/\ $//g 
    grep -o ".) $1.*=" $p_r_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\([A-Z]\)/_\L\1/g"|sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
@@ -27,16 +27,16 @@ function print_actions_usage {
 
 ## Print the usage statement while exiting.
 function print_actions_usage_exiting {
- [ -z $p_r_fileContent ] && p_r_fileContent="$1"
- [ -z $p_r_fileContent ] && p_r_fileContent="$(basename $0)"
+ [ -z "$p_r_fileContent" ] && p_r_fileContent="$1"
+ [ -z "$p_r_fileContent" ] && p_r_fileContent="$(basename $0)"
   print_actions_usage
   exit 1
 }
 
 ## Printed extended help include basic general usage, available actions, and their required parameters.
 function print_actions_help {
-  [ -z $p_r_fileContent ] && p_r_fileContent="$1"
-  [ -z $p_r_fileContent ] && p_r_fileContent=$(basename $0)
+  [ -z "$p_r_fileContent" ] && p_r_fileContent="$1"
+  [ -z "$p_r_fileContent" ] && p_r_fileContent=$(basename $0)
   print_actions_usage
   requiredParamsListText=""
   while read l; do
@@ -72,17 +72,26 @@ function print_actions_help {
     [ " " == "$potentialDescriptionLine" ] && break
     descriptionText+="$potentialDescriptionLine"
  done
+ actionParamMatrix="\tAction/Parameter Matrix:\n"
+ while read l; do
+   #echo "${l:0:8}"
+   if [ "${l:0:8}" == "function" ] && [ "${l:0:11}" != "function __" ]; then
+     func="$(echo $l|sed "s/\(^function \)\(.*\)\( {.*\)/\2/g")"
+     [ ! -z "$func" ] && actionParamMatrix+="\t\t$func --> "
+   elif [ "${l:0:9}"  == "[ -z \"\$p_" ]; then
+     param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._.*\)\(\" \].*\)/\2/g")"
+     param="$(grep ".) $param" $p_r_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
+     [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
+   elif [ "$l" == "}" ]; then
+     [ ! -z "$func" ] && actionParamMatrix=${actionParamMatrix:0:$((${#actionParaMatrix}-1))}"\n"
+     func=""
+     param=""
+  fi
+ done <<< "$(cat $p_r_fileContent)"
  helpText="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g): $descriptionText$requiredParamsListText$optionalParamsListText
 \tActions:
 ${actionsListText:0:$((${#actionsListText}-2))}
-\tAction/Parameter Matrix:
-\t\t===========================================================================
-\t\t| Action / Parameter          | ~parameter character here! | ~repitition~ |
-\t\t===========================================================================
-\t\t| ~action function name here~ | ~asterisk if used here~    | ~repitition~ |
-\t\t---------------------------------------------------------------------------
-\t\t| ~repitiition~               | ~repitiition~              | ~repitition~ |
-\t\t---------------------------------------------------------------------------
+${actionParamMatrix:0:$((${#actionParamMatrix}-2))}
 "
   printf "$helpText"
   exit

@@ -13,11 +13,11 @@
 #TODO Add namespaces comment.
 # Positional parameters inside action functions are used especially for the case of sourcing.
 
-function print_usage {
+function __print_usage {
   sh $(dirname $0)/help_actions.sh -a print_actions_usage_exiting -t $0
 }
 
-function print_help {
+function __print_help {
   sh $(dirname $0)/help_actions.sh -a print_actions_help -t $0
 }
 
@@ -56,8 +56,8 @@ if [ "$1" != "skip_run" ]; then
       n) p_o_lineNumber=$OPTARG ;;
       ## The text to be treated as a list.
       t) p_r_text=$OPTARG ;;
-      h) print_help ;;
-      *) print_usage ;;
+      h) __print_help ;;
+      *) __print_usage ;;
     esac
   done
   # Generic action call with positional parameters based on available ones.
