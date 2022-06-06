@@ -12,6 +12,8 @@
 
 #TODO Add namespaces comment.
 # Positional parameters inside action functions are used especially for the case of sourcing.
+# Required parameters are denoted with the p_r_ prefix.
+# Optional parameters are denoted with the p_o_ prefix.
 
 function __print_usage {
   sh $(dirname $0)/help_actions.sh -a print_actions_usage_exiting -t $0
@@ -48,7 +50,7 @@ if [ "$1" != "skip_run" ]; then
     read -t 0.1 inp;
     [ -z $inp ] && print_usage
   fi
-  while getopts "a:t:n:h" o; do
+  while getopts "ha:t:n:" o; do
     case $o in
       ## The name of the function to be triggered.
       a) p_r_action=$OPTARG ;;

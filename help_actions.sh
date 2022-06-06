@@ -100,7 +100,7 @@ helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText
   exit
 }
 
-while getopts "a:t:h" o; do
+while getopts "ha:t:" o; do
   case $o in
     ## Action parameter indicates which function to be called.
     a) p_r_action=$OPTARG ;;
