@@ -11,68 +11,37 @@
 ################################################################################
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
+# Required parameters are denoted with the p_r_ prefix.
+# Optional parameters are denoted with the p_o_ prefix.
 
-u="Usage: $(basename $0) -a action_name_here ~additional optional actions here~ ~repitition~"
-
-function print_usage {
-  echo $u
-  exit 1
+function __print_usage {
+  sh $(dirname $0)/help_actions.sh -a print_actions_usage_exiting -t $0
 }
 
-function print_help {
- echo "$u"
- aht=""
-  while read l; do
-    if [ "${l:0:2}" == "##" ]; then
-      ca="${l:2:${#l}}"
-    elif [ "${l:0:8}" == "function" ]; then
-      cd="$(echo $l|sed s/function\ //g|sed s/\ \{//g)"
-      if [ ! -z "$ca" ] && [ ! -z "$cd" ]; then
-        aht+="\t\t$cd -> $ca\n"
-      fi  
-      ca=""
-      cd=""
-    fi  
-  done <<< "$(grep '^function' -B1 $(basename $0) |grep '##' -A1)"
-  f="$(cat $(basename $0))"
-  dht=""
-  for ((ln=5;ln<10;ln++)); do
-    pl="$(echo "$f"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
-    dht+="$pl"
-    [ " " == "$pl" ] && break
-  done
-  h="$(echo "$f"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g): $dht
-\tParameters:
-\t\t~parameter character here~ -> ~description of parameter here~.
-\t\t~repition~
-\tActions
-${aht:0:$((${#aht}-2))}
-\tAction/Parameter Matrix:
-\t\t===========================================================================
-\t\t| Action / Parameter          | ~parameter character here! | ~repitition~ |
-\t\t===========================================================================
-\t\t| ~action function name here~ | ~asterisk if used here~    | ~repitition~ |
-\t\t---------------------------------------------------------------------------
-\t\t| ~repitiition~               | ~repitiition~              | ~repitiition~|
-\t\t---------------------------------------------------------------------------
-"
-  printf "$h"
-  exit
+function __print_help {
+  sh $(dirname $0)/help_actions.sh -a print_actions_help -t $0
 }
 
 ## ~comment describing the action here~
 function ~action function name here~ {
-  [ -z ~parameter variable here~ ] && ~parameter variable here~="~function positional parameter here~"
+  [ -z "~parameter variable here~" ] && ~parameter variable here~="~function positional parameter here~"
   ~action implementation here~
 }
 
 ~repitition~
 
 if [ "$1" != "skip_run" ]; then
-  while getopts "~getopts parameter string here~" o; do
+  if [ -z $1 ]; then
+    read -t 0.1 inp;
+    [ -z $inp ] && print_usage
+  fi
+  while getopts "ha:~getopts parameter string here~" o; do
     case $o in
-      a) action=$OPTARG ;;
+      ## The name of the function to be triggered.
+      a) p_r_action=$OPTARG ;;
+      ~description of parameter here~
       ~parameter character here~) ~parameter variable here~=$OPTARG ;;
+      ~repitition~
       ~repitition~
       h) print_help ;;
       *) print_usage ;;
