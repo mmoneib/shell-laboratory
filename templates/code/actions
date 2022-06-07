@@ -22,31 +22,37 @@ function __print_help {
   sh $(dirname $0)/help_actions.sh -a print_actions_help -t $0
 }
 
+function __print_missing_parameter_error {
+  echo "Validation Error: Missing the '$1' parameter required for this action.">&2
+  exit 1
+}
+
 ## ~comment describing the action here~
 function ~action function name here~ {
-  [ -z "~parameter variable here~" ] && ~parameter variable here~="~function positional parameter here~"
+  [ -z "~parameter variable here~" ] && __print_missing_parameter_error ~parameter_name_here~
+  ~further validation of optional parameters or for types here~
+  ~repitition~
+  ~repitition~
   ~action implementation here~
 }
 
 ~repitition~
 
-if [ "$1" != "skip_run" ]; then
-  if [ -z $1 ]; then
-    read -t 0.1 inp;
-    [ -z $inp ] && print_usage
-  fi
-  while getopts "ha:~getopts parameter string here~" o; do
-    case $o in
-      ## The name of the function to be triggered.
-      a) p_r_action=$OPTARG ;;
-      ~description of parameter here~
-      ~parameter character here~) ~parameter variable here~=$OPTARG ;;
-      ~repitition~
-      ~repitition~
-      h) print_help ;;
-      *) print_usage ;;
-    esac
-  done
-  # Generic action call with positional parameters based on available ones.
-  $action ~parameter variable here~ ~repitition~
+if [ -z $1 ]; then
+  read -t 0.1 inp;
+  [ -z $inp ] && __print_usage
 fi
+while getopts "ha:~getopts parameter string here~" o; do
+  case $o in
+    ## The name of the function to be triggered.
+    a) p_r_action=$OPTARG ;;
+    ~description of parameter here~
+    ~parameter character here~) ~parameter variable here~=$OPTARG ;;
+    ~repitition~
+    ~repitition~
+    h) __print_help ;;
+    *) __print_usage ;;
+  esac
+done
+# Generic action call.
+$action

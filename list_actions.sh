@@ -63,5 +63,5 @@ if [ "$1" != "skip_run" ]; then
     esac
   done
   # Generic action call with positional parameters based on available ones.
-  $p_r_action $p_r_text $p_o_lineNumber
+  $p_r_action "$p_r_text" "$p_o_lineNumber"
 fi
