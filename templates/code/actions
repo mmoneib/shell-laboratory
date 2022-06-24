@@ -1,10 +1,10 @@
 #!/bin/sh
 ################################################################################
-# ~title of script here~                                                      #
+# ~title of script here~                                                       #
 #                                                                              #
 # ~extensive description of script here~                                       #
 #                                                                              #
-# Type: Actions            .                                                   #
+# Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
 #     ~additional dependenies here~                                            #
 # Developed by: Muhammad Moneib                                                #
@@ -15,15 +15,20 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 function __print_usage {
-  sh $(dirname $0)/help_actions.sh -a print_actions_usage_exiting -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
 }
 
 function __print_help {
-  sh $(dirname $0)/help_actions.sh -a print_actions_help -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_help -t $0
 }
 
 function __print_missing_parameter_error {
   echo "Validation Error: Missing the '$1' parameter required for this action.">&2
+  exit 1
+}
+
+function __print_incorrect_action_error {
+  echo "Validation Error: The provided action is not available. Please check Help for more info..">&2
   exit 1
 }
 
@@ -38,10 +43,16 @@ function ~action function name here~ {
 
 ~repitition~
 
-if [ -z $1 ]; then
-  read -t 0.1 inp;
-  [ -z $inp ] && __print_usage
+[ -z "$1" ] && __print_usage
+# Check if input is piped.
+read -t 0.1 inp; # Doesn't read more than a line.
+if [ ! -z "$inp" ]; then
+  ~input text parameter here~="$inp"
+  while read inp; do
+     ~input text parameter here~+="\n$inp"
+  done
 fi
+# Parse options and parameters.
 while getopts "ha:~getopts parameter string here~" o; do
   case $o in
     ## The name of the function to be triggered.
@@ -54,5 +65,5 @@ while getopts "ha:~getopts parameter string here~" o; do
     *) __print_usage ;;
   esac
 done
-# Generic action call.
-$action
+# Generic action call with protection against script injection.
+[ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error

@@ -17,8 +17,8 @@
 #TODO Allow symbols disallowed by the terminal to be used as pads (e.g. *).
 #TODO Add option to disallow cutting words.
 #TODO Review order of options.
-#TODO Validae options types.
-#TODO Modify horizonal and vertical starts options to allow for arbitrary numbers.
+#TODO Validate options types.
+#TODO Modify horizontal and vertical starts options to allow for arbitrary numbers.
 #TODO Add ability to have lines widths controlled by a mathematical functions to allow liquification into shapes.
 
 usage="Usage 1: text_liquifier.sh -f file_name_here [-l left_padding_symbol_here] [-r right_padding_symbol_here] [-z horizontal_alignment_here] [-v vertical_alignment_here]
@@ -34,10 +34,8 @@ Arguments:
 \t-z: horizontal alignment. Must be either 'left', 'center', or 'right'. Default is 'center'.
 \t-v: vertical alignment. Must be either 'top', 'center', or 'botton'. Default is 'center'.\n"
 
-function print_usage {
-  echo "$usage"
-  echo "Try './text_liquifier.sh -h' for more information."
-  exit
+function __print_usage {
+  sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
 }
 
 function print_help {
@@ -46,75 +44,67 @@ function print_help {
   exit
 }
 
+function __print_incorrect_parameter_value_error {
+  echo "Validation Error: The provided value $1 is not supported by this parameter $2. Please check Help for more info.">&2
+  exit 1
+}
+
 function initialize_input {
-  d_numScreenColumns=$(tput cols);
-  d_numScreenLines=$(tput lines);
-  c_leftPaddingSymbol=" ";
-  c_rightPaddingSymbol=" ";
+  d_numScreenColumns=$(tput cols)
+  d_numScreenLines=$(tput lines)
+  c_leftPaddingSymbol=" "
+  c_rightPaddingSymbol=" "
   c_columnsLimitation=0
-  d_horCenter=$((d_numScreenColumns/2));
-  d_verCenter=$((d_numScreenLines/2));
-  c_horStartFunc='$((d_horCenter-(d_numOfColumns/2)))';
-  c_verStartFunc='$((d_verCenter-(numOfLines/2)))';
+  d_horCenter=$((d_numScreenColumns/2))
+  d_verCenter=$((d_numScreenLines/2))
+  c_horStartFunc='$((d_horCenter-(d_numOfColumns/2)))'
+  c_verStartFunc='$((d_verCenter-(numOfLines/2)))'0
   d_text=""
-  if [ -z $1 ]; then # Case of no options at all, to allow piping..
-    while read -t 1 inp; do
-      d_text+="$inp"
+  [ -z "$1" ] && __print_usage
+  # Check if input is piped.
+  read -t 0.1 inp; # Doesn't read more than a line.
+  if [ ! -z "$inp" ]; then
+    c_r_text="$inp"
+    while read inp; do
+      c_r_text+="'\n$inp"
     done
-    if [ -z "$d_text" ]; then
-      print_usage
-    fi
   fi
   while getopts f:z:v:l:r:b:h o; do
     case $o in
-      f) d_text="$(cat $OPTARG)" ;;
-      b) c_columnsLimitation=$OPTARG ;;
-      z) # polymorphism.
-        if [[ "$OPTARG" == "left" ]]; then
-          c_horStartFunc='$(echo 0)';
-        elif [[ "$OPTARG" == "center" ]]; then
-          c_horStartFunc='$((d_horCenter-(d_numOfColumns/2)))';
-        elif [[ "$OPTARG" == "right" ]]; then
-          c_horStartFunc='$((d_numScreenColumns-d_numOfColumns))';
-        else
-          echo "Error: Invalid horizontal option value!">&2;
-          print_usage;
-        fi
-        ;;	
-      v) # polymorphism.
-        if [[ "$OPTARG" == "top" ]]; then
-          c_verStartFunc='$(echo 0)';
-        elif [[ "$OPTARG" == "center" ]]; then
-          c_verStartFunc='$((d_verCenter-(numOfLines/2)))';
-        elif [[ "$OPTARG" == "bottom" ]]; then
-          c_verStartFunc='$((d_numScreenLines-numOfLines))';
-        else
-          echo "Error: Invalid vertical option value!">&2;
-          print_usage;
-        fi
-        ;;
-      l) 
-        if ((${#OPTARG}>1)); then
-          echo "Error: Invalid left padding symbol! A symbol must be a single character.">&2
-          print_usage
-        fi
-        c_leftPaddingSymbol="$OPTARG";
-        ;;
-      r)
-        if ((${#OPTARG}>1)); then
-          echo "Error: Invalid right padding symbol! A symbol must be a single character.">&2
-          print_usage
-        fi
-        c_rightPaddingSymbol=$OPTARG
-        ;;
+      t) c_r_text="$OPTARG" ;;
+      b) c_columnsLimitation="$OPTARG" ;;
+      z) c_horizontalAlignment="$OPTARG" ;;
+      v) c_verticalAlignment="$OPTARG" ;;
+      l) c_leftPaddingSymbol="$OPTARG" ;;
+      r) c_rightPaddingSymbol="$OPTARG" ;;
       h) print_help ;;
-      *) print_usage ;;
+      *) __print_usage ;;
     esac
   done
-  if [ -z "$d_text" ]; then
-    print_usage
+  [ -z "$c_r_text" ] &&  __print_usage
+  [ -f "$c_r_text" ] && d_text="$(cat $c_r_text)" || d_text="$c_r_text"
+  # Polymorphism
+  if [[ "$c_horizontalAlignment" == "left" ]]; then
+    d_horStartFunc='$(echo 0)'
+  elif [[ "$c_horizontalAlignment" == "center" ]]; then
+    d_horStartFunc='$((d_horCenter-(d_numOfColumns/2)))'
+  elif [[ "$c_horizontalAlignment" == "right" ]]; then
+    d_horStartFunc='$((d_numScreenColumns-d_numOfColumns))'
+  else
+    __print_incorrect_parameter_value_error "$c_horizontalAlignment" "horizontal_alignment"
+  fi 
+  # Polymorphism
+  if [[ "$v_horizontalAlignment" == "top" ]]; then
+    d_verStartFunc='$(echo 0)'
+  elif [[ "$v_horizontalAlignment" == "center" ]]; then
+    d_verStartFunc='$((d_verCenter-(numOfLines/2)))'
+  elif [[ "$v_horizontalAlignment" == "bottom" ]]; then
+    d_verStartFunc='$((d_numScreenLines-numOfLines))'
+  else
+    __print_incorrect_parameter_value_error "$c_verticalAlignment" "vertical_alignment"
   fi
-}
+  (($c_leftPaddingSymbol>1)) &&  __print_incorrect_parameter_value_error "$c_leftPaddingSymbol" "left_padding_symbol"
+} 
 
 function process_data {
   o_lines=()
@@ -156,6 +146,6 @@ function output {
   raw_output
 }
 
-initialize_input $@
+initialize_input "$@"
 process_data
 output
