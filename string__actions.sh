@@ -14,11 +14,11 @@
 # Optional parameters are denoted with the c_o_ prefix.
 
 function __print_usage {
-  sh $(dirname $0)/helc__actions.sh -a print_actions_usage_exiting -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
 }
 
 function __print_help {
-  sh $(dirname $0)/helc__actions.sh -a print_actions_help -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_help -t $0
 }
 
 function __print_missing_parameter_error {
@@ -54,7 +54,7 @@ function count_char_occurrences {
 }
 
 ## Flips the case of eachn character in the supplied text.
-function flic_case {
+function flip_case {
   [ -z "$c_r_text" ] && __print_missing_parameter_error "text"
   [ -f "$c_r_text" ] && c_r_text="$(cat $c_r_text)"
   flippedCaseText="";
@@ -125,7 +125,7 @@ function replace_positional_placeholders {
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
-## Repplaces each encountered placeholder with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
+## Replaces each encountered placeholder with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
 function replace_text_by_dictionary { 
   [ -z "$c_r_text" ] && __print_missing_parameter_error "text"
   [ -f "$c_r_text" ] && c_r_text="$(cat $c_r_text)"

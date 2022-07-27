@@ -1,15 +1,15 @@
 #!/bin/sh
-usage="Usage: ."
+usage="Usage: .$(basename $0) -c choices_here _n number_of_iterations_here -v choice_values_here -w weights_pf_iterations_here [-s stop_choice_pattern_here] [-m multiplication_indicator_here] [-p compounding_indicator_here]"
 while getopts "n:c:v:w:h:s:mp" o; do
   case "$o" in
     m) isMultiplication="true" ;;
     p) isCompounding="true" ;;
     n) numOfIterations="$OPTARG" ;;
-    h) echo "Help: ." && exit ;;
+    s) stopPattern="$OPTARG" ;;
     w) weightsPar="$OPTARG" ;;
     c) choicesPar="$OPTARG" ;;
     v) valuesPar="$OPTARG" ;;
-    s) stopPattern="$OPTARG" ;;
+    h) echo "Help: ." && exit ;;
     *) echo "$usage">&2 && exit 1 ;;
   esac
 done
@@ -65,7 +65,7 @@ while read inp; do
       equation+="$value*$weight+"
     fi
   done
-  echo "$equation"
+  #echo "$equation"
   echo "$inp->$(echo $equation|sed s/\+$//g|sed s/\*$//g|bc -l)"
 done <<< "$(printf "$output")"
 

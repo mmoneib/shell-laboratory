@@ -8,7 +8,7 @@
 #                                                                              #
 # Type: Progressive Process.                                                   #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     color_utilities__sourceable.sh.                                          #
+#     color__actions.sh.                                                       #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -18,13 +18,14 @@
 
 # Sourcing from anywhere.
 scriptFile=$0
-followedScriptFile=$(readlink $scriptFile)
-while [ ! -z $followedScriptFile ]; do
-  scriptFile=$followedScriptFile
-  followedScriptFile=$(readlink "$followedScriptFile")
-done
+#followedScriptFile=$(readlink $scriptFile)
+#while [ ! -z $followedScriptFile ]; do
+#  scriptFile=$followedScriptFile
+#  followedScriptFile=$(readlink "$followedScriptFile")
+#done
 scriptPath=$(dirname $scriptFile)
-source "$scriptPath/"color_utilities__sourceable.sh "skip_run" # The parameter skips initialization output.
+#source "$scriptPath/"color__actions.sh
+color__actions="$scriptPath/""color__actions.sh"
 
 #TODO Move to resources.
 usage="Usage: wealth_ladder.sh -i initial_amount_here -n number_of_iterations_here -r interest_rate_here [-c notional_amount_here [-p takeprofit_iterations_here] [-l stoploss_iterations_here] [-g leveraged_amount_here] [-o exchange_rate_here]] [-v]"
@@ -161,11 +162,11 @@ function pretty_output {
      fi
      row="$row -- Overall Profit: ${o_overallProfits[$i]}"
      if [ "$i" == "$o_referenceCurrentIteration" ]; then
-       print_text_with_color_and_background "$row" 7 246 # White on grey
+       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 246 # White on grey
      elif [ ! -z "$c_stopLossIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"-"$c_stopLossIterations")) ]; then
-       print_text_with_color_and_background "$row" 7 196 # White on red
+       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 196 # White on red
      elif [ ! -z "$c_takeProfitIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"+"$c_takeProfitIterations")) ]; then #TODO Calc should move to processing.
-       print_text_with_color_and_background "$row" 7 34 # White on green
+       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 34 # White on green
      else
        if [ $c_verbosity == true ]; then
          printf "$row\n"
