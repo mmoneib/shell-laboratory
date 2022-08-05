@@ -12,10 +12,10 @@
 ################################################################################
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
-# Required parameters are denoted with the p_r_ prefix.
-# Optional parameters are denoted with the p_o_ prefix.
+# Required parameters are denoted with the c_r_ prefix.
+# Optional parameters are denoted with the c_o_ prefix.
 
-function __print_usage {
+function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
 }
 
@@ -87,22 +87,22 @@ function print_text_with_color_and_background {
 # Check if input is piped.
 read -t 0.1 inp; # Doesn't read more than a line.
 if [ ! -z "$inp" ]; then
-  p_o_text="$inp"
+  c_o_text="$inp"
   while read inp; do
-     p_o_text+="\n$inp"
+     c_o_text+="\n$inp"
   done
 fi
 # Parse options and parameters.
 while getopts "ha:b:c:t:" o; do
   case $o in
     ## The name of the function to be triggered.
-    a) p_r_action=$OPTARG ;;
+    a) c_r_action=$OPTARG ;;
     ## The background to be preinted for the text.
-    b) p_o_background=$OPTARG ;;
+    b) c_o_background=$OPTARG ;;
     ## The color of the text.
-    c) p_o_color=$OPTARG ;;
+    c) c_o_color=$OPTARG ;;
     ## The text to be printed on the screen,
-    t) p_o_text=$OPTARG ;;
+    t) c_o_text=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac

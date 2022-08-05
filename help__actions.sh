@@ -11,7 +11,7 @@
 ################################################################################
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
-# Required parameters are denoted with the p_r_ prefix.
+# Required parameters are denoted with the c_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
 #TODO Add actions for processes help generation.
@@ -24,7 +24,7 @@ function __print_incorrect_action_error {
 
 ## Print the usage statement for actions without exiting.
 function print_actions_usage {
- [ -z "$c_r_fileContent" ] && p_r_fileContent="$(basename $0)"
+ [ -z "$c_r_fileContent" ] && c_r_fileContent="$(basename $0)"
  function __print_usage {
    #grep "$1" $c_r_fileContent |grep -v "grep -v"|sed s/\).*\#\#\ /\ /g|sed s/^\ *[\ ]/-/g |tr "\n" " "|sed s/\ $//g 
    grep -o ".) $1.*=" $c_r_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\([A-Z]\)/_\L\1/g"|sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
@@ -36,14 +36,14 @@ function print_actions_usage {
 
 ## Print the usage statement for actions while exiting.
 function print_actions_usage_exiting {
- [ -z "$c_r_fileContent" ] && p_r_fileContent="$(basename $0)"
+ [ -z "$c_r_fileContent" ] && c_r_fileContent="$(basename $0)"
   print_actions_usage
   exit 1
 }
 
 ## Printed extended help include basic general usage, available actions, and their required parameters.
 function print_actions_help {
-  [ -z "$c_r_fileContent" ] && p_r_fileContent=$(basename $0)
+  [ -z "$c_r_fileContent" ] && c_r_fileContent=$(basename $0)
   print_actions_usage
   fileText="$(cat $c_r_fileContent)"
   title="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g)"
@@ -57,7 +57,7 @@ function print_actions_help {
   while read l; do
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && requiredParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
-  done <<< "$(grep -v "grep" $c_r_fileContent|grep -B1 ") p_r_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
+  done <<< "$(grep -v "grep" $c_r_fileContent|grep -B1 ") c_r_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
   [ ! -z "$requiredParamsListText" ] && requiredParamsListText="\n\tRequired Parameters:\n${requiredParamsListText:0:$((${#requiredParamsListText}-2))}"
   optionalParamsListText=""
   description=""
@@ -109,9 +109,9 @@ helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText
 while getopts "ha:t:" o; do
   case $o in
     ## Action parameter indicates which function to be called.
-    a) p_r_action=$OPTARG ;;
+    a) c_r_action=$OPTARG ;;
     ## FileContent parameter contains the path of the file whose Help needs to be generated.
-    t) p_r_fileContent=$OPTARG $c_r_file_content ;;
+    t) c_r_fileContent=$OPTARG $c_r_file_content ;;
     h) print_actions_help ;;
     *) print_actions_usage_exiting ;;
   esac
