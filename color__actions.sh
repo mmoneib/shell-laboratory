@@ -12,8 +12,8 @@
 ################################################################################
 
 # Positional parameters inside action functions are used especially for the case of sourcing.
-# Required parameters are denoted with the c_r_ prefix.
-# Optional parameters are denoted with the c_o_ prefix.
+# Required parameters are denoted with the p_r_ prefix.
+# Optional parameters are denoted with the p_o_ prefix.
 
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
@@ -74,12 +74,12 @@ function print_all_colors_vertically_with_nums {
 
 ## Print text in the screen with a specific font color and background color. 
 function print_text_with_color_and_background {
-  [ -z "$c_o_text" ] && __print_missing_parameter_error "text"
-  [ -z "$c_o_color" ] && __print_missing_parameter_error "color"
-  [ -z "$c_o_background" ] && __print_missing_parameter_error "background"
-  tput setaf "$c_o_color"
-  tput setab "$c_o_background"
-  printf "$c_o_text"
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -z "$p_o_color" ] && __print_missing_parameter_error "color"
+  [ -z "$p_o_background" ] && __print_missing_parameter_error "background"
+  tput setaf "$p_o_color"
+  tput setab "$p_o_background"
+  printf "$p_o_text"
   __print_end_line
 }
 
@@ -87,25 +87,25 @@ function print_text_with_color_and_background {
 # Check if input is piped.
 read -t 0.1 inp; # Doesn't read more than a line.
 if [ ! -z "$inp" ]; then
-  c_o_text="$inp"
+  p_o_text="$inp"
   while read inp; do
-     c_o_text+="\n$inp"
+     p_o_text+="\n$inp"
   done
 fi
 # Parse options and parameters.
 while getopts "ha:b:c:t:" o; do
   case $o in
     ## The name of the function to be triggered.
-    a) c_r_action=$OPTARG ;;
+    a) p_r_action=$OPTARG ;;
     ## The background to be preinted for the text.
-    b) c_o_background=$OPTARG ;;
+    b) p_o_background=$OPTARG ;;
     ## The color of the text.
-    c) c_o_color=$OPTARG ;;
+    c) p_o_color=$OPTARG ;;
     ## The text to be printed on the screen,
-    t) c_o_text=$OPTARG ;;
+    t) p_o_text=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
 done
 # Generic action call with protection against script injection.
-[ ! -z "$(grep "^function $c_r_action" $0)" ] && $c_r_action || __print_incorrect_action_error
+[ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error

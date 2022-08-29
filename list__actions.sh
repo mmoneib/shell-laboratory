@@ -34,18 +34,18 @@ function __print_incorrect_action_error {
 
 ## Gets the line of the specified number in a file or an output.
 function get_nth_line {
-  [ -z "$c_r_text" ] && __print_missing_parameter_error "text"
-  [ -f "$c_r_text" ] && p_r_text="$(cat $c_r_text)"
-  [ -z "$c_o_lineNumber" ] &&  __print_missing_parameter_error "line_number"
-  echo -e "$c_r_text" | head -"$c_o_lineNumber" | tail -1 # The -e option is needed to preserve newline.
+  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
+  [ -z "$p_o_lineNumber" ] &&  __print_missing_parameter_error "line_number"
+  echo -e "$p_r_text" | head -"$p_o_lineNumber" | tail -1 # The -e option is needed to preserve newline.
 }
 
 ## Gets a random line in a file or an output.
 function get_random_line {
-  [ -z "$c_r_text" ] && __print_missing_parameter_error "text"
-  [ -f "$c_r_text" ] && p_r_text="$(cat $c_r_text)"
-  randomLineNumber="$(echo $((($RANDOM+1)% $(echo -e "$c_r_text"|wc -l))))" # Adding 1 to start from 1 instead 0 and to include the last line which equals to the file size.
-  echo -e "$c_r_text" | head -$randomLineNumber | tail -1 # The -e option is needed to preserve newline.
+  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
+  randomLineNumber="$(echo $((($RANDOM+1)% $(echo -e "$p_r_text"|wc -l))))" # Adding 1 to start from 1 instead 0 and to include the last line which equals to the file size.
+  echo -e "$p_r_text" | head -$randomLineNumber | tail -1 # The -e option is needed to preserve newline.
 }
 
 [ -z "$1" ] && __print_usage
@@ -71,4 +71,4 @@ while getopts "ha:t:n:" o; do
   esac
 done
 # Generic action call with positional parameters based on available ones.
-[ ! -z "$(grep "^function $c_r_action" $0)" ] && $c_r_action || __print_incorrect_action_error
+[ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
