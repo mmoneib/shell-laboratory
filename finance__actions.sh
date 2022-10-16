@@ -15,20 +15,22 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 function __print_usage {
-  sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
+  exit
 }
 
 function __print_help {
   sh $(dirname $0)/help__actions.sh -a print_actions_help -t $0
+  exit
 }
 
 function __print_missing_parameter_error {
-  echo "Validation Error: Missing the '$1' parameter required for this action.">&2
+  sh $(dirname $0)/help__actions.sh -a print_missing_parameter_error -p $1
   exit 1
 }
 
 function __print_incorrect_action_error {
-  echo "Validation Error: The provided action is not available. Please check Help for more info..">&2
+  sh $(dirname $0)/help__actions.sh -a __print_incorrect_action_error
   exit 1
 }
 

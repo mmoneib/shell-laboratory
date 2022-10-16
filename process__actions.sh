@@ -1,12 +1,13 @@
 #!/bin/sh
 ################################################################################
-# List Actions                                                                 #
+# Process Actons                                                               #
 #                                                                              #
-# A collection of actions related to lists, their manipulation, retrieval, and #
-# storage.                                                                     #
+# A collection of actions dedicated to getting information about processes     #
+# and aiding with their inter-communication using signals and data sharing.    #
 #                                                                              #
-# Type: Actions            .                                                   #
+# Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
+#     ~additional dependenies here~                                            #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -34,43 +35,33 @@ function __print_incorrect_action_error {
   exit 1
 }
 
-## Gets the line of the specified number in a file or an output.
-function get_nth_line {
-  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
-  [ -z "$p_o_lineNumber" ] &&  __print_missing_parameter_error "line_number"
-  echo -e "$p_r_text" | head -"$p_o_lineNumber" | tail -1 # The -e option is needed to preserve newline.
-}
-
-## Gets a random line in a file or an output.
-function get_random_line {
-  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
-  randomLineNumber="$(echo $((($RANDOM+1)% $(echo -e "$p_r_text"|wc -l))))" # Adding 1 to start from 1 instead 0 and to include the last line which equals to the file size.
-  echo -e "$p_r_text" | head -$randomLineNumber | tail -1 # The -e option is needed to preserve newline.
+## Interrupts ascendingly the ancestors of the processe specified by the PID and then itself. Requires the calling process to be interrupted as well indepemdemtly.
+function interrupt_process_and_all_ancestors_of_process_by_pid {
+  [ -z "$p_r_processId" ] && __print_missing_parameter_error "p_r_processId"
+  # TODO add validation of being a number?
+  processAtHandId="$p_r_processId"
+  while true; do
+    parent="$(ps -o pid,ppid | grep "^ $processAtHandId [1-9][a-z][A-Z]"|cut -d " " -f 2)" # Assuming a PID is alphanumeric.
+    processAtHandId="$parent"
+    [ -z "$parent" ] && break
+    kill -INT $parent 
+  done
+  kill -INT $p_r_processId
 }
 
 [ -z "$1" ] && __print_usage
 # Check if input is piped.
 read -t 0.1 inp; # Doesn't read more than a line.
-if [ ! -z "$inp" ]; then
-  p_r_text="$inp"
-  while read inp; do
-    p_r_text+="\n$inp"
-  done
-fi
 # Parse options and parameters.
-while getopts "ha:t:n:" o; do
+while getopts "ha:p:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
-    ## The number of the line within a text made of lines.
-    n) p_o_lineNumber=$OPTARG ;;
-    ## The text to be treated as a list.
-    t) p_r_text=$OPTARG ;;
+    ## The PID of the process.
+    p) p_r_processId=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
 done
-# Generic action call with positional parameters based on available ones.
+# Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error

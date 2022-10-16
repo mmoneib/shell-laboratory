@@ -22,6 +22,7 @@
 #TODO Add support for animation frames.
 #TODO Add options dialog.
 
+. ./bind
 tput clear;
 horPos=0;
 verPos=0;
@@ -70,7 +71,7 @@ while read -rsn1 inp; do
       esac
       # No flushing of the rest of the control symbol is needed since the original loop reads one char at a time till it finds \033.
       ;;
-    * )
+      * )
       printf "$inp";
       horPos=$(($horPos+1));
     esac

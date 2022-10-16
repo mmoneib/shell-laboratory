@@ -56,9 +56,19 @@ function print_help {
   exit
 }
 
+function __print_usage {  
+  sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
+  exit
+}
+
+function __print_help {
+  sh $(dirname $0)/help__actions.sh -a print_actions_help -t $0
+  exit
+}
+
 function initialize_input {
   if [ -z $1 ]; then # Case of no options at all.
-    print_usage
+    __print_usage
   fi
   c_verbosity=false
   while getopts "i:r:n:l:p:c:o:g:vhw" o; do
@@ -73,12 +83,12 @@ function initialize_input {
       g) c_currentLeveragedAmount=$OPTARG ;;
       v) c_verbosity=true ;;
       w) c_isRawOutput=true ;;
-      h) print_help ;;
-      *) print_usage ;;
+      h) __print_help ;;
+      *) __print_usage ;;
     esac
   done
   if [ -z $c_initialAmount ] || [ -z $c_interestRate ] || [ -z $c_numberOfIterations ]; then
-    print_usage
+    __print_usage
   fi 
   if [ -z $c_currentAmount ]; then
     c_currentAmount=$c_initialAmount
