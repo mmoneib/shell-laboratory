@@ -14,7 +14,8 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
-#TODO Add actions for processes help generation.
+#TODO Combine common code between Process and Actions docs generation..
+#TODO Make print line at the end of the help component (like optionalParamsListText) instead of in the beginning of each component.
 #TODO Add actions for utlities help generation.
 
 function print_incorrect_action_error {
@@ -50,7 +51,7 @@ function print_process_usage {
  echo "Usage: $p_o_fileContent $requiredOptionsText [$optionalOptionsText]"|sed s/\\[\\]//g
 }
 
-## Print extended help include basic general usage, available actions, and their required parameters.
+## Print extended help for Actions scripts, including general usage, input parameters, available actions, and their required parameters.
 function print_actions_help {
   [ -z "$p_o_fileContent" ] && p_o_fileContent=$(basename $0)
   print_actions_usage
@@ -110,6 +111,38 @@ actionParamMatrix=${actionParamMatrix:0:$((${#actionParamMatrix}-2))}
 helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText$actionsListText$actionParamMatrix
 "
   printf "$helpText"
+  exit
+}
+
+## Print extended help for Process scripts, including description, general usage, aand configuration parameters.
+function print_process_help {
+  [ -z "$p_o_fileContent" ] && p_o_fileContent=$(basename $0)
+  print_process_usage
+  fileText="$(cat $p_o_fileContent)"
+  title="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g)"
+  descriptionText=""
+  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
+    potentialDescriptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
+    [ " " == "$potentialDescriptionLine" ] && break
+    descriptionText+="$potentialDescriptionLine"
+  done
+  requiredParamsListText=""
+  while read l; do
+    [ -z "$description" ] && description="$l" && continue
+    [ -z "$parameter" ] && parameter="$l" && requiredParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_r_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_r_.*\)/\1/g")"
+  [ ! -z "$requiredParamsListText" ] && requiredParamsListText="\n\tRequired Parameters:\n${requiredParamsListText:0:$((${#requiredParamsListText}-2))}"
+  optionalParamsListText=""
+  description=""
+  parameter=""
+  while read l; do
+    [ -z "$description" ] && description="$l" && continue
+    [ -z "$parameter" ] && parameter="$l" && optionalParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_o_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_o_.*\)/\1/g")"
+  [ ! -z "$optionalParamsListText" ] && optionalParamsListText="\n\tOptional Parameters:\n${optionalParamsListText:0:$((${#optionalParamsListText}-2))}"
+  helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText"
+  printf "$helpText"
+  echo
   exit
 }
 
