@@ -15,40 +15,43 @@
 usage=""
 help=""
 
-function print_usage {
-  echo "$usage"
-  echo "Try $(basename $0) -h' for more information."
-  exit 1
+function __print_usage {  
+  sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
+  exit
 }
 
-function print_help {
-  echo "$usage"
-  printf "$help"
+function __print_help {
+  sh $(dirname $0)/help__actions.sh -a print_process_help -t $0
   exit
 }
 
 function initialize_input {
   if [ -z $1 ]; then # Case of no options at all.
-    print_usage
+    __print_usage
   fi
-  c_horMagnification=1
-  c_verMagnification=1
-  c_charsDirectory="templates/text/magnifiable_ascii/"
-  while getopts "H:d:t:V:h" o; do
+  c_o_horMagnification=1
+  c_o_verMagnification=1
+  c_o_charsDirectory="templates/text/magnifiable_ascii/"
+  while getopts "H:d:t:V:ih" o; do
     case $o in
-      H) c_horMagnification="$OPTARG" ;;
-      d) c_charsDirectory="$OPTARG" ;;
-      t) c_text="$OPTARG" ;;
-      V) c_verMagnification="$OPTARG" ;;
-      i) c_isWrap=true ;;
-      h) print_help ;;
-      *) print_usage ;;
+      ## The horizontal magnification factior.
+      H) c_o_horMagnification="$OPTARG" ;;
+      ## The directory containing the ASCII drawings representing the chars.
+      d) c_o_charsDirectory="$OPTARG" ;;
+      ## The text to be magnified.
+      t) c_r_text="$OPTARG" ;;
+      ## The vertical magnification factor.
+      V) c_o_verMagnification="$OPTARG" ;;
+      ## Whether a letter to be wrapped in the next line if cut by the edge of the screen or not.
+      i) c_o_isWrap=true ;;
+      h) __print_help ;;
+      *) __print_usage ;;
     esac
   done
-  if [ -f "$c_text"  ]; then
-    d_text="$(cat $c_text)"
+  if [ -f "$c_r_text"  ]; then
+    d_text="$(cat $c_r_text)"
   else
-    d_text="$c_text"
+    d_text="$c_r_text"
   fi
 }
 
@@ -58,24 +61,24 @@ function process_data {
   for ((c=0;c<${#d_text};c++)); do
     char=$(echo ${d_text:$c:1} | tr '[:lower:]' '[:upper:]')
     case $char in
-       "") char_file=$c_charsDirectory/space ;;
-       * ) char_file=$c_charsDirectory/$char ;;
+       "") char_file=$c_o_charsDirectory/space ;;
+       * ) char_file=$c_o_charsDirectory/$char ;;
     esac
     symbol_char_text=$(cat $char_file);
     symbolCharLines=()
     while IFS="" read symbol_char_line; do
       newSymbolCharLine=""
       while IFS="" read -n1 symbol_inner_char; do
-        for ((i=0;i<$c_horMagnification;i++)); do
+        for ((i=0;i<$c_o_horMagnification;i++)); do
           newSymbolCharLine+="$symbol_inner_char"
         done
       done <<< "$symbol_char_line"
-      for ((i=0;i<$c_verMagnification;i++)); do
+      for ((i=0;i<$c_o_verMagnification;i++)); do
         symbolCharLines+=("$newSymbolCharLine")
       done
     done <<< "$symbol_char_text"
     betweenCharsSpace=""
-     [ $firstChar == false ] && for ((i=0;i<$c_horMagnification;i++)); do # Scaling spaces between scaled characters.
+     [ $firstChar == false ] && for ((i=0;i<$c_o_horMagnification;i++)); do # Scaling spaces between scaled characters.
       betweenCharsSpace+=" "
     done
     for ((i=0;i<${#symbolCharLines[@]};i++)); do

@@ -22,18 +22,13 @@ done
 scriptPath=$(dirname $scriptFile)
 source "$scriptPath/"~sourced script name here~.sh "skip_run" # The parameter skips initialization output.
 
-usage=~usage text here~
-help=~help text here~
-
-function print_usage {
-  echo "$usage"
-  echo "Try '~script name here~.sh -h' for more information."
-  exit 1
+function __print_usage {  
+  sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
+  exit
 }
 
-function print_help {
-  echo "$usage"
-  printf "$help"
+function __print_help {
+  sh $(dirname $0)/help__actions.sh -a print_process_help -t $0
   exit
 }
 
