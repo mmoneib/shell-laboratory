@@ -15,17 +15,9 @@
 # Namspaces: c for config, d for data, and o for output.
 
 #TODO Review order of options.
-#TOD Remove sourcing?
 
-# Sourcing from anywhere.
 scriptFile=$0
-#followedScriptFile=$(readlink $scriptFile)
-#while [ ! -z $followedScriptFile ]; do
-#  scriptFile=$followedScriptFile
-#  followedScriptFile=$(readlink "$followedScriptFile")
-#done
 scriptPath=$(dirname $scriptFile)
-#source "$scriptPath/"color__actions.sh
 color__actions="$scriptPath/""color__actions.sh"
 
 function __print_usage {  

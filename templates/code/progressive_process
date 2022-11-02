@@ -32,11 +32,24 @@ function __print_help {
   exit
 }
 
+~a hook for adding a certain behavour at a specific event (like trapping EXIT to clear)~
+~repitition~
+
 function initialize_input {
   if [ -z $1 ]; then # Case of no options at all.
     print_usage
   fi
-  ~options parsing and c_ variables initialization here~
+  ~c_ variables defaults here~
+  while getopts "h~getopts parameter string here" o; do
+    case "$o" in
+    ~description of parameter here~
+    ~parameter character here~) ~parameter variable here~=$OPTARG ;;
+    ~repitition~
+    ~repitition~
+     h) __print_help ;;
+     *) __print_usage ;;
+    esac
+  done
   ~options validation here~
   ~d_ variables initialization here~
 }
