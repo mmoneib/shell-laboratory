@@ -38,12 +38,8 @@ function __print_incorrect_action_error {
 function ~action function name here~ {
   [ -z "~parameter variable here~" ] && __print_missing_parameter_error ~parameter_name_here~
   ~further validation of optional parameters or for types here~
-  ~repitition~
-  ~repitition~
   ~action implementation here~
 }
-
-~repitition~
 
 [ -z "$1" ] && __print_usage
 # Check if input is piped.
@@ -61,8 +57,6 @@ while getopts "ha:~getopts parameter string here~" o; do
     a) p_r_action=$OPTARG ;;
     ~description of parameter here~
     ~parameter character here~) ~parameter variable here~=$OPTARG ;;
-    ~repitition~
-    ~repitition~
     h) __print_help ;;
     *) __print_usage ;;
   esac

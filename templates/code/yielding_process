@@ -12,16 +12,6 @@
 
 # Namspaces: c for config, d for data, and o for output.
 
-# Sourcing from anywhere.
-scriptFile=$0
-followedScriptFile=$(readlink $scriptFile)
-while [ ! -z $followedScriptFile ]; do
-  scriptFile=$followedScriptFile
-  followedScriptFile=$(readlink "$followedScriptFile")
-done
-scriptPath=$(dirname $scriptFile)
-source "$scriptPath/"~sourced script name here~.sh "skip_run" # The parameter skips initialization output.
-
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
   exit
@@ -76,4 +66,3 @@ function output {
 
 initialize_input $@
 process_data
-output
