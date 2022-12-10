@@ -6,7 +6,7 @@
 # interest, taking into consideration the human psychology and the need for    # 
 # risk control, all calculated and visualized in a convenient way.             #
 #                                                                              #
-# Type: Progressive Process.                                                   #
+# Type: Linear Process.                                                        #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
 #     color__actions.sh.                                                       #
 # Developed by: Muhammad Moneib                                                #

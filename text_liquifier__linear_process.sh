@@ -6,7 +6,7 @@
 # directions and the padding of the empty spaces around the sentences can be   #
 # done with any symbol.                                                        #
 #                                                                              #
-# Type: Progressive Process.                                                   #
+# Type: Linear Process.                                                        #
 # Dependencies: Unix-like Shell (tested with Bash), and tput.                  #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################

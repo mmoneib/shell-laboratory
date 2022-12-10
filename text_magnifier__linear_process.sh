@@ -5,7 +5,7 @@
 # A magnifier of characters and symbols through mutliplication of the simplest #
 # form of an ASCII-like graphical representation.                              #
 #                                                                              #
-# Type: Progressive Process.                                                   #
+# Type: Linear Process.                                                        #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################

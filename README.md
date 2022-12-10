@@ -27,7 +27,7 @@ Scripts are maintained in a flat directory structure and each script's archetype
 
 ### Types of Processes
 The Process archetype comes in different flavours depending on its workflow:
-* **Progressive Process**: A linear process which starts by input initialization, then processes the data, and ends by providing the output as information in one shot.
+* **Linear Process**: A linear process which starts by input initialization, then processes the data, and ends by providing the output as information in one shot.
 * **Yielding Process**: A process in which the control of the output is based on a processed criteria. Thus the input is initialized, data is processed inside a loop inside of which a decision of made whether to provide information as an output or not incrementally.
 
 ## Coding Guidelines
