@@ -149,7 +149,7 @@ read -t 0.1 inp; # Doesn't read more than a line.
 if [ ! -z "$inp" ]; then
   p_r_text="$inp"
   while read inp; do
-    p_r_text+="'\n$inp"
+    p_r_text+="\n$inp"
   done 
 fi
 # Parse options and parameters.

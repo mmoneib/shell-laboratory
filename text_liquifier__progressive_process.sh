@@ -53,7 +53,7 @@ function initialize_input {
   if [ ! -z "$inp" ]; then
     c_r_text="$inp"
     while read inp; do
-      c_r_text+="'\n$inp"
+      c_r_text+="\n$inp"
     done
   fi
   while getopts f:z:v:l:r:b:h o; do

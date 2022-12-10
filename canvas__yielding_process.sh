@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Canvas 1.0                                                                   #
+# Canvas                                                                       #
 #                                                                              #
 # A script that allows free movement of the cursor on the terminal screen.     #
 # This can be used for artistic endeavors like ASCII drawings, pixel art,      #
