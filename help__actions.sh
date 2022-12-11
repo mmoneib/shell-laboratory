@@ -31,8 +31,7 @@ function print_missing_parameter_error {
 function print_actions_usage {
  [ -z "$p_o_fileContent" ] && p_o_fileContent="$(basename $0)"
  function __print_usage {
-   #grep "$1" $p_o_fileContent |grep -v "grep -v"|sed s/\).*\#\#\ /\ /g|sed s/^\ *[\ ]/-/g |tr "\n" " "|sed s/\ $//g 
-   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\(.*[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g"|sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
+   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g" |sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g"# |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
  }
  requiredOptionsText="$(__print_usage 'p_r_')"
  optionalOptionsText="$(__print_usage 'p_o_')"
@@ -43,8 +42,7 @@ function print_actions_usage {
 function print_process_usage {
  [ -z "$p_o_fileContent" ] && p_o_fileContent="$(basename $0)"
  function __print_usage {
-   #grep "$1" $p_o_fileContent |grep -v "grep -v"|sed s/\).*\#\#\ /\ /g|sed s/^\ *[\ ]/-/g |tr "\n" " "|sed s/\ $//g 
-   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\(.*[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g"|sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
+   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g" |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
  }
  requiredOptionsText="$(__print_usage 'c_r_')"
  optionalOptionsText="$(__print_usage 'c_o_')"
@@ -148,7 +146,7 @@ function print_process_help {
 
 [ -z $1 ] && print_actions_usage
 # Parse options and parameters.
-while getopts "ha:t:" o; do
+while getopts "ha:t:p:" o; do
   case $o in
     ## Action parameter indicates which function to be called.
     a) p_r_action=$OPTARG ;;
@@ -161,4 +159,4 @@ while getopts "ha:t:" o; do
   esac
 done
 # Generic action call with positional parameters based on available ones.
-[ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
+[ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || print_incorrect_action_error

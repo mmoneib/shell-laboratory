@@ -13,8 +13,10 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
+#TODO Add ignore case to all actions.
+
 function __print_usage {
-  sh $(dirname $0)/help__actions.sh -a print_actions_usage_exiting -t $0
+  sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
   exit
 }
 
@@ -29,7 +31,7 @@ function __print_missing_parameter_error {
 }
 
 function __print_incorrect_action_error {
-  sh $(dirname $0)/help__actions.sh -a __print_incorrect_action_error
+  sh $(dirname $0)/help__actions.sh -a print_incorrect_action_error
   exit 1
 }
 
@@ -76,28 +78,17 @@ function flip_case {
   printf "$flippedCaseText";
 }
 
-## Shows the positions (starting from 1) of the supplied single character in the supplied text. If multiple occurrences, the positions are separated by commas. The search can be flagged as case-insensitive.
-function show_positions_of_char {
+## Replaces each encountered placeholder {} with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
+function remove_text { 
   [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
-  [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
-  [ -z "$p_o_ignoreCase" ] && p_o_ignoreCase="false"
-  if [ "$p_o_ignoreCase" == "true" ]; then
-    p_o_character="$(echo "$p_o_character"|sed "s/\(.\)/\U\1/g")"
-    p_r_text="$(echo "$p_r_text"|sed "s/\(.\)/\U\1/g")"
-  fi
-  posText=""
-  # Using # inside ${} to get the size of the string.
-  for ((i=0; i<${#p_r_text}; i++)); do 
-    if [[ "${p_r_text:i:1}" == "$p_o_character" ]]; then 
-      posText+="$((i+1)),"
-    fi 
-  done
-  [ ${#posText} -eq 0 ] && posText="," # To avoid errors while removing the last comma in case of no positions.
-  echo "${posText:0:$((${#posText}-1))}"
+  [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "separated_list_text"
+  p_o_dictionary=""
+  p_o_dictionary="$(printf "$p_o_separatedListText"|sed "s/\([^;]\)$/\1;/g"|sed "s/;/=;/g")"
+  replace_text_by_dictionary
 }
 
-## Rpplaces each encountered placeholder with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
+## Replaces each encountered placeholder {} with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
 function replace_positional_placeholders { 
   [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
@@ -126,7 +117,7 @@ function replace_positional_placeholders {
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
-## Replaces each encountered placeholder with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
+## Replaces each encountered text entry from the dictionaty with its corresponding text there.
 function replace_text_by_dictionary { 
   [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
@@ -137,10 +128,32 @@ function replace_text_by_dictionary {
     field=$(echo "$p_o_dictionary"|cut -d ';' -f $recordPos)
     key="$(echo "$field"|cut -d '=' -f 1)"
     value="$(echo "$field"|cut -d '=' -f 2)"
-    outputText="$(echo "$outputText"|sed "s/$key/$value/g")"
+    outputText="$(echo "$outputText"|sed "s/^key/$value/g"|sed "s/ \?$key/$value/g")" # ? is used to indicate pre-word space as optional. First sed is to cover the case when the key is the first thing in the text without space before it.
     recordPos=$((recordPos+1))
- done
+  done
+  outputText+="\n"
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
+}
+
+## Shows the positions (starting from 1) of the supplied single character in the supplied text. If multiple occurrences, the positions are separated by commas. The search can be flagged as case-insensitive.
+function show_positions_of_char {
+  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
+  [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
+  [ -z "$p_o_ignoreCase" ] && p_o_ignoreCase="false"
+  if [ "$p_o_ignoreCase" == "true" ]; then
+    p_o_character="$(echo "$p_o_character"|sed "s/\(.\)/\U\1/g")"
+    p_r_text="$(echo "$p_r_text"|sed "s/\(.\)/\U\1/g")"
+  fi
+  posText=""
+  # Using # inside ${} to get the size of the string.
+  for ((i=0; i<${#p_r_text}; i++)); do 
+    if [[ "${p_r_text:i:1}" == "$p_o_character" ]]; then 
+      posText+="$((i+1)),"
+    fi 
+  done
+  [ ${#posText} -eq 0 ] && posText="," # To avoid errors while removing the last comma in case of no positions.
+  echo "${posText:0:$((${#posText}-1))}"
 }
 
 [ -z "$1" ] && __print_usage
@@ -159,7 +172,7 @@ while getopts "ha:c:t:l:d:i" o; do
     a) p_r_action=$OPTARG ;;
     ## The character to be queried or manipulated. The size must be of a single character.
     c) p_o_character=$OPTARG ;;
-    ## A list of keys and values that resembles to a dictionat. The record separator defaults to semi-colon, while the key/value separator is '='.
+    ## A list of keys and values that resembles to a dictionary. The record separator defaults to semi-colon, while the key/value separator is '='.
     d) p_o_dictionary="$OPTARG" ;;
     ## A flag to become case-insensitive while querying. If the option is present, the flag is true; otherwise, false.
     i) p_o_ignoreCase="true" ;;
@@ -171,5 +184,6 @@ while getopts "ha:c:t:l:d:i" o; do
     *) __print_usage ;;
   esac
 done
+
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ]  && $p_r_action || __print_incorrect_action_error

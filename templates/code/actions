@@ -30,7 +30,7 @@ function __print_missing_parameter_error {
 }
 
 function __print_incorrect_action_error {
-  sh $(dirname $0)/help__actions.sh -a __print_incorrect_action_error
+  sh $(dirname $0)/help__actions.sh -a print_incorrect_action_error
   exit 1
 }
 
