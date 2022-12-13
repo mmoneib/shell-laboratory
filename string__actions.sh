@@ -78,6 +78,13 @@ function flip_case {
   printf "$flippedCaseText";
 }
 
+## Keep the first and last letters only in each word of the supplied text.
+function remove_internal_chars {
+  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
+  printf "$p_r_text\n" | tr '\n' '\r' | sed "s/\([a-Z]\)[a-Z]*\([a-Z][^a-Z]\)/\1\2/g"|tr '\r' '\n' # The command tr is used as a workaround since sed doesn't consider \n outside [a-z].
+}
+
 ## Replaces each encountered placeholder {} with the field whose turn comes in the supplied separated list. The number of placeholders should be the same as the number of fields in the list.
 function remove_text { 
   [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
@@ -133,6 +140,18 @@ function replace_text_by_dictionary {
   done
   outputText+="\n"
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
+}
+
+## Shows the char value of the character supplied as a decimal number.
+function show_char_of_decimal {
+  [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
+  printf "\\$(printf %o $p_o_character)\n" # Convert the decimal to octal and then print th char (by \\) of the octal.
+}
+
+## Shows the decimal value of the supplied character.
+function show_decimal_of_char {
+  [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
+  printf "%d\n" "'$p_o_character"
 }
 
 ## Shows the positions (starting from 1) of the supplied single character in the supplied text. If multiple occurrences, the positions are separated by commas. The search can be flagged as case-insensitive.
