@@ -13,7 +13,9 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
-#TODO Add ignore case to all actions.
+#TODO Add ignore case to all suitable actions.
+#TODO Update README to reflect preference to internal calls.
+#TODO Add action to roll circularly for a given list (regex) of acceptable values.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -142,10 +144,27 @@ function replace_text_by_dictionary {
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
+## Roll the characters of a string based on their numerical (decimal) value and the offset provided.
+function roll_chars_by_offset {
+  [ -z "$p_r_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_r_text" ] && p_r_text="$(cat $p_r_text)"
+  [ -z "$p_o_offset" ] && __print_missing_parameter_error "offset"
+  outputText=""
+  for ((p=0;p<${#p_r_text};p++)); do 
+    c="${p_r_text:$p:1}"
+    p_o_character="$c" # Preparing for internal call to another action.
+    val="$(show_decimal_of_char $c)"
+    newVal="$(($val+$p_o_offset))"
+    newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
+    outputText+="$newChar"
+  done
+  printf "$outputText\n"
+}
+
 ## Shows the char value of the character supplied as a decimal number.
 function show_char_of_decimal {
   [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
-  printf "\\$(printf %o $p_o_character)\n" # Convert the decimal to octal and then print th char (by \\) of the octal.
+  printf "\\$(printf %o $p_o_character)\n" # Convert the decimal to octal and then print the char (by \\) of the octal.
 }
 
 ## Shows the decimal value of the supplied character.
@@ -185,7 +204,7 @@ if [ ! -z "$inp" ]; then
   done 
 fi
 # Parse options and parameters.
-while getopts "ha:c:t:l:d:i" o; do
+while getopts "ha:c:d:il:o:t:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -197,6 +216,9 @@ while getopts "ha:c:t:l:d:i" o; do
     i) p_o_ignoreCase="true" ;;
     ## A string in the form of a list separated by the serparator, which defaults to ai semi-colon.
     l) p_o_separatedListText=$OPTARG ;;
+    ## Offset number indicating the distance between two elements in the string.
+    o) p_o_offset=$OPTARG ;;
+     #  [ "$OPTARG" -eq "$(echo $OPTARG | grep "^[0-9]*$")" ] || echo "ERROR: Incorrect parameter value for o." ;;
     ## The text to be queried or manipulated. This can be a string specified via command line, or a path to a text file.
     t) p_r_text="$OPTARG" ;;
     h) __print_help ;;

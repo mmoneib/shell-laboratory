@@ -78,7 +78,7 @@ function print_actions_help {
   actionsListText="\n\tActions:\n"
   while read l; do
     if [ "${l:0:2}" == "##" ]; then
-      funcDesc="${l:2:${#l}}"
+      funcDesc="${l:3:${#l}}"
     elif [ "${l:0:8}" == "function" ]; then
       funcName="$(echo $l|sed s/function\ //g|sed s/\ \{//g)"
       if [ ! -z "$funcDesc" ] && [ ! -z "$funcName" ]; then
