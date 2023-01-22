@@ -15,12 +15,9 @@
 
 #TODO Add ignore case to all suitable actions.
 #TODO Update README to reflect preference to internal calls.
-#TODO Add action to roll circularly for a given list (regex) of acceptable values.
 #TODO Add documentation of preference of multiple calls at runtime than increased complexity.
 #TODO Combine all rolling actions into one.
-#TODO Adding email address verification.
-#TODO Add case alternation.
-#TODO Add sorting of letters.
+#TODO Add sorting of letters per word.
 #TODO Add calculated replacement of chars from list.
 
 function __print_usage {
@@ -41,6 +38,36 @@ function __print_missing_parameter_error {
 function __print_incorrect_action_error {
   sh $(dirname $0)/help__actions.sh -a print_incorrect_action_error
   exit 1
+}
+
+## Alternate cases of specified position with even or odd offset, or based o separated sequence of numbers.
+function change_case_of_character {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_offset" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "offset"
+  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_offset" ] && __print_missing_parameter_error "separatedListText"
+  changedCaseText="";
+  IFS=""; while read l; do # IFS needed to preserve leading spaces.
+    for ((i=0;i<${#l};i++)); do # Reading per line in order to be able to detect newlines.
+      c="${l:i:1}"
+      if [ "$p_o_offset" == "even" ] && [ $((i%2)) -eq 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
+      elif [ "$p_o_offset" == "even" ] && [ $((i%2)) -ne 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+      elif [ "$p_o_offset" == "odd" ] && [ $((i%2)) -eq 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+      elif [ "$p_o_offset" == "odd" ] && [ $((i%2)) -ne 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
+      else # The case for sequence.
+        IFS=";"; read -a sequenceArr <<< "$p_o_separatedListText"
+        for (( j=0;j<${#sequenceArr};j++ )); do
+          [ $((i%$(echo ${sequenceArr[$j]}))) -eq 0 ] && changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g") || changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+        done
+      fi 
+    done
+    changedCaseText+="\n"
+  done <<< "$p_o_text"
+  printf "$changedCaseText";
 }
 
 ## Counts the number of timnes a specified single character appears in the supplied text. The search cab be flagged as case-insensitive.
@@ -74,7 +101,7 @@ function flip_case {
     for (( i=0;i<${#l};i++)); do # Reading per line in order to be able to detect newlines.
       # Using $ to compare strings, as comparison of values when provide the correct equality.
       c="${l:i:1}"
-      flippedC="$(echo "$c"|sed "s/\(.\)/\U\1/g")"
+      flippedC="$(echo "$c"|sed "s/\(.\)/\U\1/g")" # Using sed's capture group \(..\) and the \U operator to indicate upper case of group 1.
       if [[ "$c" == "$flippedC" ]]; then
         flippedCaseText="$flippedCaseText$(echo "$flippedC"|sed "s/\(.\)/\L\1/g")"
       else
@@ -96,6 +123,12 @@ function is_string_alphabetic {
 function is_string_alphanumeric {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ ! -z "$(echo $p_o_text | grep "^[0-9A-Za-z]*$")" ] && echo "true" || echo "false"
+}
+
+## Check if the provided string is an email address.
+function is_string_email {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ ! -z "$(echo $p_o_text | grep "^[a-zA-Z][0-9A-Za-z]*@[a-zA-Z][0-9A-Za-z]*\.[a-zA-Z]\+$")" ] && echo "true" || echo "false"
 }
 
 ## Check if the provided string is a number.
