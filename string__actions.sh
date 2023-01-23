@@ -19,6 +19,8 @@
 #TODO Combine all rolling actions into one.
 #TODO Add sorting of letters per word.
 #TODO Add calculated replacement of chars from list.
+#TODO Add documentation that a basic functionm must be accessible before creating convenient functions.
+#TODO Add action to modify indentations with tabs and spaces.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -38,36 +40,6 @@ function __print_missing_parameter_error {
 function __print_incorrect_action_error {
   sh $(dirname $0)/help__actions.sh -a print_incorrect_action_error
   exit 1
-}
-
-## Alternate cases of specified position with even or odd offset, or based o separated sequence of numbers.
-function change_case_of_character {
-  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_offset" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "offset"
-  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_offset" ] && __print_missing_parameter_error "separatedListText"
-  changedCaseText="";
-  IFS=""; while read l; do # IFS needed to preserve leading spaces.
-    for ((i=0;i<${#l};i++)); do # Reading per line in order to be able to detect newlines.
-      c="${l:i:1}"
-      if [ "$p_o_offset" == "even" ] && [ $((i%2)) -eq 0 ]; then
-        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
-      elif [ "$p_o_offset" == "even" ] && [ $((i%2)) -ne 0 ]; then
-        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
-      elif [ "$p_o_offset" == "odd" ] && [ $((i%2)) -eq 0 ]; then
-        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
-      elif [ "$p_o_offset" == "odd" ] && [ $((i%2)) -ne 0 ]; then
-        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
-      else # The case for sequence.
-        IFS=";"; read -a sequenceArr <<< "$p_o_separatedListText"
-        for (( j=0;j<${#sequenceArr};j++ )); do
-          [ $((i%$(echo ${sequenceArr[$j]}))) -eq 0 ] && changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g") || changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
-        done
-      fi 
-    done
-    changedCaseText+="\n"
-  done <<< "$p_o_text"
-  printf "$changedCaseText";
 }
 
 ## Counts the number of timnes a specified single character appears in the supplied text. The search cab be flagged as case-insensitive.
@@ -207,6 +179,53 @@ function replace_text_by_dictionary {
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
+## Roll the characters of a string based on their numerical (decimal) value and the offset provided, or the regex ranges allowed, or based on a given sequence of numbers procedurally.
+function roll_chars {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_offset" ] && isOffseted="true" || isOffseted="false"
+  [ -z "$p_o_range" ] && isRanged="true" || isRanged="false"
+  [ -z "$p_o_separatedListText" ] && isSequenced="true" || isSequenced="false"
+  outputText=""
+  if [ "$isRanged" == "true" ]; then
+    rangesStr="$(echo "$p_o_range" | sed "s/\[//g"|sed "s/\]//g"|sed "s/\(.\)/\1\1/g"|sed "s/.--.//g")"
+    temp="$p_o_text"
+    p_o_text="$rangeStr"
+    rangeDecimalsList="$(show_decimals_of_string)"
+    p_o_text="$temp"
+    rangeDecimalsList="$(echo "${rangeDecimalsList:0:$((#rangeDecimalsList-1)))}" | tr , "/n" | sort -n | tr "/n" ,)"
+    IFS=","; read -a rangeDecimalsArr <<< "$rangeDecimalsList"
+  fi
+  for ((p=0;p<${#p_o_text};p++)); do 
+    c="${p_o_text:$p:1}"
+    p_o_character="$c" # Preparing for internal call to another action.
+    val="$(show_decimal_of_char $c)"
+    if [ -z "$p_o_offset" ]; then
+      newVal="$(($val+$p_o_offset))"
+      if [ -z "$p_o_range" ]; then
+        isFound="false"
+        while [ "$isFound" == "$false" ]; do # SHould run maximum twice due to the % at the end of the loop.
+          for ((i=0;i<${$((#rangeDecimalsArr[@]-1))};i+2)); do
+            begin="${rangeDecimalsArr[$i]}"
+            end="${rangeDecimalsArr[$((i+1))]}"
+            if [ "$isPotential"="true" ] && [ "$newVal" -lt "$begin" ]; then
+              newVal="$(($newVal-$end))"
+            fi
+            [ "$newVal" -gt "$end" ] && isPotential="true" && continue || isPotential="false"
+            [ "$newVal" -ge "$begin" ] || [ "$newVal" -le "$end" ] && isFound="true" && break 
+          done
+          if [ "$isFound" == "false" ]; then
+             newVal="$(($newVal%$end))"
+          fi
+        done
+      fi
+    fi
+    newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
+    outputText+="$newChar"
+  done
+  printf "$outputText\n"
+}
+
 ## Roll the characters of a string based on their numerical (decimal) value and the offset provided.
 function roll_chars_by_offset {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
@@ -283,10 +302,58 @@ function roll_chars_circularly_by_sequence {
   printf "$outputText\n"
 }
 
+## Set case of each character in the provided text based on its even or odd position, or based on a provided sequence of intervals; first position is 1 (not 0 based).
+function set_case_procedurally {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_offset" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "offset"
+  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_offset" ] && __print_missing_parameter_error "separatedListText"
+  changedCaseText="";
+  IFS=";"; read -a sequenceArr <<< "$p_o_separatedListText"
+  IFS=""; while read l; do # IFS needed to preserve leading spaces.
+    seqPos=0
+    [ "${#sequenceArr[@]}" -ge "0" ] && nextSeqCheckPos=$((${sequenceArr[0]}-1)) # -1 to avoid 0 based effect.
+    for ((i=0;i<${#l};i++)); do # Reading per line in order to be able to detect newlines.
+      c="${l:i:1}"
+      p=$((i+1))
+      if [ "$p_o_offset" == "even" ] && [ $((p%2)) -eq 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
+      elif [ "$p_o_offset" == "even" ] && [ $((p%2)) -ne 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+      elif [ "$p_o_offset" == "odd" ] && [ $((p%2)) -eq 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+      elif [ "$p_o_offset" == "odd" ] && [ $((p%2)) -ne 0 ]; then
+        changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
+      else # The case for sequence.
+        if [ "$nextSeqCheckPos" -eq "$i" ]; then
+          seqPos=$((($seqPos+1)%${#sequenceArr[@]}))
+          nextSeqCheckPos=$(($i+${sequenceArr[$seqPos]}))
+          changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
+        else
+          changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
+        fi
+      fi 
+    done
+    changedCaseText+="\n"
+  done <<< "$p_o_text"
+  printf "$changedCaseText";
+}
+
 ## Shows the char value of the character supplied as a decimal number.
 function show_char_of_decimal {
   [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
   printf "\\$(printf %o $p_o_character)\n" # Convert the decimal to octal and then print the char (by \\) of the octal.
+}
+
+## Shows a comma-separated list of decimals representing the chars of the provided text.
+function show_decimals_of_string {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  decimalsList=""
+  for ((i=0;i<${#p_o_text};i++)); do
+     p_o_character="${p_o_text:i:1}"
+    decimalsList+="$(show_decimal_of_char),"
+  done
+  printf "$decimalsList\n"
 }
 
 ## Shows the decimal value of the supplied character.
@@ -344,6 +411,8 @@ while getopts "ha:b:c:d:e:il:o:s:t:" o; do
     ## Offset number indicating the distance between two elements in the string.
     o) p_o_offset=$OPTARG ;;
      #  [ "$OPTARG" -eq "$(echo $OPTARG | grep "^[0-9]*$")" ] || echo "ERROR: Incorrect parameter value for o." ;;
+    ## A Regex range of characters enclosed in squared braces.
+    r) p_o_range=$OPTARG ;;
     ## A sequence of numbers used in calculated string manipulations.
     s) p_o_sequence=$OPTARG ;;
     ## The text to be queried or manipulated. This can be a string specified via command line, or a path to a text file.

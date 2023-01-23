@@ -96,7 +96,7 @@ function print_actions_help {
       func="$(echo $l|sed "s/\(^function \)\(.*\)\( {.*\)/\2/g")"
       [ ! -z "$func" ] && actionParamMatrix+="\t\t$func --> "
     elif [ "${l:0:9}"  == "[ -z \"\$p_" ]; then
-      param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._.*\)\(\" \].*\)/\2/g")"
+      param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._[^\"]*\)\(.*$\)/\2/g")"
       param="$(grep ".) $param" $p_o_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
       [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
     elif [ "$l" == "}" ]; then
