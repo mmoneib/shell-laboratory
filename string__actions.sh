@@ -183,36 +183,42 @@ function replace_text_by_dictionary {
 function roll_chars {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_offset" ] && isOffseted="true" || isOffseted="false"
-  [ -z "$p_o_range" ] && isRanged="true" || isRanged="false"
-  [ -z "$p_o_separatedListText" ] && isSequenced="true" || isSequenced="false"
+  [ -z "$p_o_offset" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "offset"
+  [ -z "$p_o_range" ]
+  [ -z "$p_o_separatedListText" ]
   outputText=""
-  if [ "$isRanged" == "true" ]; then
-    rangesStr="$(echo "$p_o_range" | sed "s/\[//g"|sed "s/\]//g"|sed "s/\(.\)/\1\1/g"|sed "s/.--.//g")"
+  if [ ! -z "$p_o_range" ]; then
+    rangeStr="$(echo "$p_o_range" | sed "s/\[//g"|sed "s/\]//g"|sed "s/\(.\)/\1\1/g"|sed "s/.--.//g")" # Repeat single chars to simulate a range prepare the string for parsing.
     temp="$p_o_text"
     p_o_text="$rangeStr"
     rangeDecimalsList="$(show_decimals_of_string)"
     p_o_text="$temp"
-    rangeDecimalsList="$(echo "${rangeDecimalsList:0:$((#rangeDecimalsList-1)))}" | tr , "/n" | sort -n | tr "/n" ,)"
+    rangeDecimalsList="$(echo "${rangeDecimalsList:0:$((${#rangeDecimalsList}-1))}" | tr , "/n" | sort -n | tr "/n" ,)"
     IFS=","; read -a rangeDecimalsArr <<< "$rangeDecimalsList"
   fi
   for ((p=0;p<${#p_o_text};p++)); do 
     c="${p_o_text:$p:1}"
     p_o_character="$c" # Preparing for internal call to another action.
     val="$(show_decimal_of_char $c)"
-    if [ -z "$p_o_offset" ]; then
+    if [ ! -z "$p_o_offset" ]; then
       newVal="$(($val+$p_o_offset))"
-      if [ -z "$p_o_range" ]; then
+      if [ ! -z "$p_o_range" ]; then
         isFound="false"
-        while [ "$isFound" == "$false" ]; do # SHould run maximum twice due to the % at the end of the loop.
-          for ((i=0;i<${$((#rangeDecimalsArr[@]-1))};i+2)); do
+        while [ "$isFound" == "false" ]; do # Should run maximum twice due to the % at the end of the loop.
+          for ((i=0;i<$((${#rangeDecimalsArr[@]}-1));i+2)); do
             begin="${rangeDecimalsArr[$i]}"
+            oldEnd="$end"
             end="${rangeDecimalsArr[$((i+1))]}"
-            if [ "$isPotential"="true" ] && [ "$newVal" -lt "$begin" ]; then
-              newVal="$(($newVal-$end))"
+            if [ "$val" -lt "$begin" ] || [ "$val" -gt "$end" ]; then
+              newVal="$val"
+              isFound="true"
+              break
+            fi
+            if [ "$isPotential" == "true" ] && [ "$newVal" -lt "$begin" ]; then
+              newVal="$(($begin+$newVal-$oldEend))"
             fi
             [ "$newVal" -gt "$end" ] && isPotential="true" && continue || isPotential="false"
-            [ "$newVal" -ge "$begin" ] || [ "$newVal" -le "$end" ] && isFound="true" && break 
+            [ "$newVal" -ge "$begin" ] && [ "$newVal" -le "$end" ] && isFound="true" && break 
           done
           if [ "$isFound" == "false" ]; then
              newVal="$(($newVal%$end))"
@@ -220,53 +226,9 @@ function roll_chars {
         done
       fi
     fi
+    echo "$newVal"
     newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
     outputText+="$newChar"
-  done
-  printf "$outputText\n"
-}
-
-## Roll the characters of a string based on their numerical (decimal) value and the offset provided.
-function roll_chars_by_offset {
-  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_offset" ] && __print_missing_parameter_error "offset"
-  outputText=""
-  for ((p=0;p<${#p_o_text};p++)); do 
-    c="${p_o_text:$p:1}"
-    p_o_character="$c" # Preparing for internal call to another action.
-    val="$(show_decimal_of_char $c)"
-    newVal="$(($val+$p_o_offset))"
-    newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
-    outputText+="$newChar"
-  done
-  printf "$outputText\n"
-}
-
-## Roll the characters of a string based on their numerical (decimal) value and the offset provided within the given boundaries (defaults to A-z, where z is followed by a to restart the cycle).
-function roll_chars_circularly_by_offset {
-  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_offset" ] && __print_missing_parameter_error "offset"
-  [ -z "$p_o_begin" ] && p_o_begin="a"
-  [ -z "$p_o_end" ] && p_o_end="z"
-  outputText=""
-  p_o_character=$p_o_begin
-  beginningValue="$(show_decimal_of_char)"
-  p_o_character=$p_o_end
-  endValue="$(show_decimal_of_char)"
-  for ((p=0;p<${#p_o_text};p++)); do 
-    c="${p_o_text:$p:1}"
-    p_o_character="$c" # Preparing for internal call to another action.
-    val="$(show_decimal_of_char $c)"
-    if [ $val -ge $beginningValue ] && [ $val -le $endValue ]; then 
-      newVal="$(($val+$p_o_offset))"
-      [ $newVal -gt $endValue ] && newVal="$(echo $beginningValue+$newVal%$endValue | bc)"
-      newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
-      outputText+="$newChar"
-    else
-      outputText+="$c"
-    fi
   done
   printf "$outputText\n"
 }
@@ -393,7 +355,7 @@ if [ ! -z "$inp" ]; then
   done 
 fi
 # Parse options and parameters.
-while getopts "ha:b:c:d:e:il:o:s:t:" o; do
+while getopts "ha:b:c:d:e:il:o:r:s:t:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -404,7 +366,8 @@ while getopts "ha:b:c:d:e:il:o:s:t:" o; do
     ## A list of keys and values that resembles to a dictionary. The record separator defaults to semi-colon, while the key/value separator is '='.
     d) p_o_dictionary="$OPTARG" ;;
     ## Ending position or character ;;
-    e) p_o_end=$OPTARG ;;    ## A flag to become case-insensitive while querying. If the option is present, the flag is true; otherwise, false.
+    e) p_o_end=$OPTARG ;;
+    ## A flag to become case-insensitive while querying. If the option is present, the flag is true; otherwise, false.
     i) p_o_ignoreCase="true" ;;
     ## A string in the form of a list separated by the serparator, which defaults to ai semi-colon.
     l) p_o_separatedListText=$OPTARG ;;
