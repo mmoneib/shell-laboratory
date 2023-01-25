@@ -16,7 +16,6 @@
 #TODO Add ignore case to all suitable actions.
 #TODO Update README to reflect preference to internal calls.
 #TODO Add documentation of preference of multiple calls at runtime than increased complexity.
-#TODO Combine all rolling actions into one.
 #TODO Add sorting of letters per word.
 #TODO Add calculated replacement of chars from list.
 #TODO Add documentation that a basic functionm must be accessible before creating convenient functions.
@@ -179,7 +178,7 @@ function replace_text_by_dictionary {
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
-## Roll the characters of a string based on their numerical (decimal) value and the offset provided, or the regex ranges allowed, or based on a given sequence of numbers procedurally.
+## Roll the characters of a string based on their numerical (decimal) value and one of the following modifiers: offset provided or a list of offsets, both with a possibility limiting the scope through regex ranges.
 function roll_chars {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
@@ -188,6 +187,9 @@ function roll_chars {
   [ -z "$p_o_separatedListText" ]
   outputText=""
   if [ ! -z "$p_o_range" ]; then
+    offset="$p_o_offset"
+  fi
+  if [ ! -z "$p_o_range" ]; then
     rangeStr="$(echo "$p_o_range" | sed "s/\[//g"|sed "s/\]//g"|sed "s/\(.\)/\1\1/g"|sed "s/.--.//g")" # Repeat single chars to simulate a range prepare the string for parsing.
     temp="$p_o_text"
     p_o_text="$rangeStr"
@@ -195,6 +197,11 @@ function roll_chars {
     p_o_text="$temp"
     rangeDecimalsList="$(echo "${rangeDecimalsList:0:$((${#rangeDecimalsList}-1))}" | tr , "/n" | sort -n | tr "/n" ,)"
     IFS=","; read -a rangeDecimalsArr <<< "$rangeDecimalsList"
+    ultimateBegin="${rangeDecimalsArr[0]}"
+    ultimateEnd="${rangeDecimalsArr[$((${#rangeDecimalsArr[@]}-1))]}"
+  fi
+  if [ ! -z "$p_o_separatedListText" ]; then
+    IFS=","; read -a offsetsArr <<< "$p_o_separatedListText"
   fi
   for ((p=0;p<${#p_o_text};p++)); do 
     c="${p_o_text:$p:1}"
@@ -202,64 +209,32 @@ function roll_chars {
     val="$(show_decimal_of_char $c)"
     if [ ! -z "$p_o_offset" ]; then
       newVal="$(($val+$p_o_offset))"
-      if [ ! -z "$p_o_range" ]; then
-        isFound="false"
-        while [ "$isFound" == "false" ]; do # Should run maximum twice due to the % at the end of the loop.
-          for ((i=0;i<$((${#rangeDecimalsArr[@]}-1));i+2)); do
-            begin="${rangeDecimalsArr[$i]}"
-            oldEnd="$end"
-            end="${rangeDecimalsArr[$((i+1))]}"
-            if [ "$val" -lt "$begin" ] || [ "$val" -gt "$end" ]; then
-              newVal="$val"
-              isFound="true"
-              break
-            fi
-            if [ "$isPotential" == "true" ] && [ "$newVal" -lt "$begin" ]; then
-              newVal="$(($begin+$newVal-$oldEend))"
-            fi
-            [ "$newVal" -gt "$end" ] && isPotential="true" && continue || isPotential="false"
-            [ "$newVal" -ge "$begin" ] && [ "$newVal" -le "$end" ] && isFound="true" && break 
-          done
-          if [ "$isFound" == "false" ]; then
-             newVal="$(($newVal%$end))"
-          fi
-        done
-      fi
+    elif [ ! -z "$p_o_separatedListText" ]; then
+      newVal="$(($val+${offsetsArr[$(($p%${#offsetsArr[@]}))]}))"
     fi
-    echo "$newVal"
+    if [ ! -z "$p_o_range" ]; then
+      isFound="false"
+      while [ "$isFound" == "false" ]; do # Should run maximum twice due to the % at the end of the loop.
+        for ((i=0;i<$((${#rangeDecimalsArr[@]}-1));i+2)); do
+          begin="${rangeDecimalsArr[$i]}"
+          oldEnd="$end"
+          [ -z "$oldEnd" ] && oldEnd="0"
+          end="${rangeDecimalsArr[$((i+1))]}"
+          if [ "$val" -lt "$begin" ] || [ "$val" -gt "$end" ]; then # Keep chars that are out of range.
+            newVal="$val"
+            isFound="true"
+            break
+          fi
+          [ "$newVal" -gt "$ultimateEnd" ] && newVal="$(($ultimateBegin+$newVal-$ultimateEnd-1))" #Rolling.
+          [ "$newVal" -lt "$begin" ] && newVal="$(($begin+$newVal))"
+          [ "$newVal" -gt "$end" ] &&  newVal="$(($newVal%$end))" && continue
+          [ "$newVal" -ge "$begin" ] && [ "$newVal" -le "$end" ] && isFound="true" && break
+        done
+      done
+    fi
+    #echo "$newVal"
     newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
     outputText+="$newChar"
-  done
-  printf "$outputText\n"
-}
-
-## Roll the characters of a string based on their numerical (decimal) value and the current iterated number of the sequence provided within the given boundaries (defaults to A-z, where z is followed by a to restart the cycle).
-function roll_chars_circularly_by_sequence {
-  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
-  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_sequence" ] && __print_missing_parameter_error "sequence"
-  [ -z "$p_o_begin" ] && p_o_begin="a"
-  [ -z "$p_o_end" ] && p_o_end="z"
-  outputText=""
-  p_o_character=$p_o_begin
-  beginningValue="$(show_decimal_of_char)"
-  p_o_character=$p_o_end
-  endValue="$(show_decimal_of_char)"
-  count=0
-  for ((p=0;p<${#p_o_text};p++)); do 
-    c="${p_o_text:$p:1}"
-    p_o_character="$c" # Preparing for internal call to another action.
-    val="$(show_decimal_of_char $c)"
-    if [ $val -ge $beginningValue ] && [ $val -le $endValue ]; then
-      offset="${p_o_sequence:$((count%${#p_o_sequence})):1}"
-      ((count++))
-      newVal="$(($val+$offset))"
-      [ $newVal -gt $endValue ] && newVal="$(echo $beginningValue+$newVal%$endValue | bc)"
-      newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
-      outputText+="$newChar"
-    else
-      outputText+="$c"
-    fi
   done
   printf "$outputText\n"
 }
