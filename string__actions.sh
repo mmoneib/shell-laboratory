@@ -16,10 +16,13 @@
 #TODO Add ignore case to all suitable actions.
 #TODO Update README to reflect preference to internal calls.
 #TODO Add documentation of preference of multiple calls at runtime than increased complexity.
-#TODO Add sorting of letters per word.
 #TODO Add calculated replacement of chars from list.
 #TODO Add documentation that a basic functionm must be accessible before creating convenient functions.
 #TODO Add action to modify indentations with tabs and spaces.
+#TODO Check if works with piped output.
+#TODO Unify spearator across all actions and make it parametarized.
+#TODO Add generic histogram in alaytics actions.
+#TODO Add option for simultaneous replacement by dictionary.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -106,6 +109,18 @@ function is_string_email {
 function is_string_number {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ ! -z "$(echo $p_o_text | grep "^[0-9]*$")" ] && echo "true" || echo "false"
+}
+
+## Check if the provided string is a palindrome.
+function is_string_palindrome {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  for ((c=0;c<${#p_o_text};c++)); do
+    frontPos="$c"
+    backPos="$((${#p_o_text}-1-$c))"
+    [ "$frontPos" -ge "$backPos" ] && break
+    [ "${p_o_text:$frontPos:1}" != "${p_o_text:$backPos:1}" ] && echo "false" && exit
+  done
+  echo "true"
 }
 
 ## Check if the provided string has a special character (any character which is not a number and not in the provided alphabetic range defaulting to [a-Z]).
@@ -276,6 +291,15 @@ function set_case_procedurally {
   printf "$changedCaseText";
 }
 
+## Reduce the provided text to a separated list of the tokens (defaults to words) included based on the regex range provided (defaults to [^a-zA-Z0-9]).
+function separate_tokens {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_range" ] && p_o_range="[^a-zA-Z0-9]"
+  outputText=$(echo "$p_o_text" | sed "s/$p_o_range/,/g"|tr "\n" ,|sed "s/,,/,/g"|sed "s/,,/,/g") # Same call at end because , has special behaviour of separating characters.
+  echo "$outputText"
+}
+
 ## Shows the char value of the character supplied as a decimal number.
 function show_char_of_decimal {
   [ -z "$p_o_character" ] && __print_missing_parameter_error "character"
@@ -318,6 +342,36 @@ function show_positions_of_char {
   done
   [ ${#posText} -eq 0 ] && posText="," # To avoid errors while removing the last comma in case of no positions.
   echo "${posText:0:$((${#posText}-1))}"
+}
+
+# Sorts the characters of each token based onl the allowed characters and their positions in the provided separated list and as specified by the direction.
+function sort_chars_per_token {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_offset" ] && __print_missing_parameter_error "separatedListText"
+  IFS=","; read -a referenceCharsArr <<< "$p_o_separatedListText"
+  outputText=""
+  lastCharPos=0
+  while [ "$lastCharPos" -lt "${#p_o_text}" ]; do
+    bufferStr=""
+    postBufferChar=""
+    for ((c=$lastCharPos;c<${#p_o_text};c++)); do
+      isFound="false"
+      for ((r=0;r<${#referenceCharsArr[@]};r++)); do
+        [ "${p_o_text:$c:1}" == "${referenceCharsArr[$r]}" ] && isFound="true" && bufferStr+="${p_o_text:$c:1}" && break
+      done
+      [ "$isFound" == "false" ] && postBufferChar="${p_o_text:$c:1}" && break
+    done
+    lastCharPos="$(($c+1))"
+    for ((r=0;r<${#referenceCharsArr[@]};r++)); do
+      for ((b=0;b<${#bufferStr};b++)); do
+        [ "${bufferStr:$b:1}" == "${referenceCharsArr[$r]}" ] && outputText+="${referenceCharsArr[$r]}" && bufferStr="$(echo "$bufferStr"|sed "s/${referenceCharsArr[$r]}//")"
+      done
+    done
+    outputText+="$bufferStr"
+    outputText+="$postBufferChar"
+  done
+  printf "$outputText\n"
 }
 
 [ -z "$1" ] && __print_usage
