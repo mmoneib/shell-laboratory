@@ -89,6 +89,32 @@ function flip_case {
   printf "$flippedCaseText";
 }
 
+## Insert a string of characters in the specified mapped positions within the whole text provided. Positions start at 1.
+function insert_string_in_positions_within_text {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_dictionary" ] && __print_missing_parameter_error "dictionary"
+  IFS=";"; read -a posStrArr <<< "$p_o_dictionary"
+  outputText=""
+  for ((c=0;c<${#p_o_text};c++)); do
+    for ((i=0;i<${#posStrArr[@]};i++)); do
+      pos="$(echo "${posStrArr[$i]}" | cut -d "=" -f 1)"
+      (( pos-- )) # To make it zeor-based.
+      if [ "$pos" -eq "$c" ]; then
+        str="$(echo "${posStrArr[$i]}" | cut -d "=" -f 2)"
+        outputText+="$str"
+      fi
+    done
+    outputText+="${p_o_text:$c:1}"
+  done
+  printf "$outputText\n"
+}
+
+## Insert a string of characters in the specified mapped positions within each line of the text provided.
+function insert_string_in_positions_within_lines {
+  echo
+}
+
 ## Check if the provided string contains only alphabetic characters based on a range (defaults to [a-Z]).
 function is_string_alphabetic {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
