@@ -19,7 +19,7 @@
 #TODO Add actions for utlities help generation.
 
 function print_incorrect_action_error {
-  echo "Validation Error: The provided action is not available. Please check Help for more info.">&2
+  echo "Validation Error: Action is missing or the provided one is not available. Please check Help for more info.">&2
 }
 
 function print_missing_parameter_error {

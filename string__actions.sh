@@ -22,7 +22,9 @@
 #TODO Check if works with piped output.
 #TODO Unify spearator across all actions and make it parametarized.
 #TODO Add generic histogram in alaytics actions.
-#TODO Add option for simultaneous replacement by dictionary.
+#TODO Insert characters simultaneaosuly in positions.
+#TODO Action to add line numbers.
+#TODO Action to add line prefix.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -181,15 +183,17 @@ function replace_text_by_dictionary {
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
   [ -z "$p_o_dictionary" ] && __print_missing_parameter_error "dictionary"
   outputText="$p_o_text"
+  valuePostfix="±§\`±\`" # An imporabable text used to avoid replacement of values if they are included as keys further down the road in a dictionary.
   recordPos=1
   while [ ! -z "$(echo "$p_o_dictionary"|cut -d ";" -f $recordPos)" ]; do
     field=$(echo "$p_o_dictionary"|cut -d ';' -f $recordPos)
     key="$(echo "$field"|cut -d '=' -f 1)"
     value="$(echo "$field"|cut -d '=' -f 2)"
-    outputText="$(echo "$outputText"|sed "s/^key/$value/g"|sed "s/ \?$key/$value/g")" # ? is used to indicate pre-word space as optional. First sed is to cover the case when the key is the first thing in the text without space before it.
+    outputText="$(echo "$outputText"|sed "s/$key\([^$valuePostfix]\)/$value$valuePostfix\1/g")"
     recordPos=$((recordPos+1))
   done
   outputText+="\n"
+  outputText="$(echo "$outputText"|sed "s/$valuePostfix//g")"
   printf "$outputText" # Using printf to have the same exact output as input in terms of formatting. The command 'echo' produces an extra line at the end.
 }
 
@@ -413,7 +417,7 @@ while getopts "ha:b:c:d:e:il:o:r:s:t:" o; do
     *) __print_usage ;;
   esac
 done
-[ -z "$p_r_action" ] && __print_missing_parameter_error
+[ -z "$p_r_action" ] && __print_incorrect_action_error
 
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ]  && $p_r_action || __print_incorrect_action_error
