@@ -8,7 +8,7 @@
 #                                                                              #
 # Type: Linear Process.                                                        #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     color__actions.sh.                                                       #
+#     screen__actions.sh.                                                       #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -18,7 +18,7 @@
 
 scriptFile=$0
 scriptPath=$(dirname $scriptFile)
-color__actions="$scriptPath/""color__actions.sh"
+screen__actions="$scriptPath/""screen__actions.sh"
 
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
@@ -146,11 +146,11 @@ function pretty_output {
      fi
      row="$row -- Overall Profit: ${o_overallProfits[$i]}"
      if [ "$i" == "$o_referenceCurrentIteration" ]; then
-       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 246 # White on grey
+       sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 246 # White on grey
      elif [ ! -z "$c_o_stopLossIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"-"$c_o_stopLossIterations")) ]; then
-       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 196 # White on red
+       sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 196 # White on red
      elif [ ! -z "$c_o_takeProfitIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"+"$c_o_takeProfitIterations")) ]; then #TODO Calc should move to processing.
-       sh $color__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 34 # White on green
+       sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 34 # White on green
      else
        if [ $c_o_verbosity == true ]; then
          printf "$row\n"

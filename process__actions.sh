@@ -2,8 +2,8 @@
 ################################################################################
 # Process Actons                                                               #
 #                                                                              #
-# A collection of actions dedicated to getting information about processes     #
-# and aiding with their inter-communication using signals and data sharing.    #
+# A set of functions to gett information about processes and aid with their    #
+# inter-communication using signals and data sharing.                          #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -63,5 +63,6 @@ while getopts "ha:p:" o; do
     *) __print_usage ;;
   esac
 done
+[ -z "$p_r_action" ] && __print_incorrect_action_error
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error

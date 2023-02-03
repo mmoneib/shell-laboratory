@@ -1,8 +1,8 @@
 #!/bin/sh
 ################################################################################
-# String Utilities                                                             #
+# String Actions                                                               #
 #                                                                              #
-# A collection of fanctions to analyze and manipulate strings.                 #    
+# A set of fanctions to analyze and manipulate strings.                        #    
 #                                                                              #
 # Type: Actions                                               .                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -22,9 +22,10 @@
 #TODO Check if works with piped output.
 #TODO Unify spearator across all actions and make it parametarized.
 #TODO Add generic histogram in alaytics actions.
-#TODO Insert characters simultaneaosuly in positions.
 #TODO Action to add line numbers.
-#TODO Action to add line prefix.
+#TODO Add direction to some funtions that involves positions or sorting.
+#TODO Action to remove indentation or any leading spaces.
+#TODO Action to perform actions in multiple files. Better, this should be in file__actions.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -95,24 +96,58 @@ function insert_string_in_positions_within_text {
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
   [ -z "$p_o_dictionary" ] && __print_missing_parameter_error "dictionary"
   IFS=";"; read -a posStrArr <<< "$p_o_dictionary"
+  refPosArr=() 
+  refStrArr=()
+  # Avoiding initialization within a loop by doing it in a separate loop first.
+  for ((i=0;i<${#posStrArr[@]};i++)); do
+    refPosArr[$i]="$(echo "${posStrArr[$i]}" | cut -d "=" -f 1)"
+    refStrArr[$i]="$(echo "${posStrArr[$i]}" | cut -d "=" -f 2)"
+  done
   outputText=""
   for ((c=0;c<${#p_o_text};c++)); do
     for ((i=0;i<${#posStrArr[@]};i++)); do
-      pos="$(echo "${posStrArr[$i]}" | cut -d "=" -f 1)"
-      (( pos-- )) # To make it zeor-based.
+      pos="${refPosArr[$i]}"
+      (( pos-- )) # To make it zero-based.
       if [ "$pos" -eq "$c" ]; then
-        str="$(echo "${posStrArr[$i]}" | cut -d "=" -f 2)"
+        str="${refStrArr[$i]}"
         outputText+="$str"
       fi
     done
     outputText+="${p_o_text:$c:1}"
   done
-  printf "$outputText\n"
+  printf "%s\n" "$outputText" # Using the format string to avoid misinterpretation of printf special characters as such when they occur within the text.
 }
 
 ## Insert a string of characters in the specified mapped positions within each line of the text provided.
 function insert_string_in_positions_within_lines {
-  echo
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_dictionary" ] && __print_missing_parameter_error "dictionary"
+  IFS=";"; read -a posStrArr <<< "$p_o_dictionary"
+  refPosArr=() 
+  refStrArr=()
+  # Avoiding initialization within a loop by doing it in a separate loop first.
+  for ((i=0;i<${#posStrArr[@]};i++)); do
+    refPosArr[$i]="$(echo "${posStrArr[$i]}" | cut -d "=" -f 1)"
+    refStrArr[$i]="$(echo "${posStrArr[$i]}" | cut -d "=" -f 2)"
+  done
+  outputText=""
+  while read line; do
+    outputLine=""
+    for ((c=0;c<${#line};c++)); do
+      for ((i=0;i<${#posStrArr[@]};i++)); do
+        pos="${refPosArr[$i]}"
+        (( pos-- )) # To make it zero-based.
+        if [ "$pos" -eq "$c" ]; then
+          str="${refStrArr[$i]}"
+          outputLine+="$str"
+        fi
+      done
+      outputLine+="${line:$c:1}"
+    done
+    outputText+="$outputLine\n"
+  done <<< "$p_o_text"
+  echo -e "$outputText"
 }
 
 ## Check if the provided string contains only alphabetic characters based on a range (defaults to [a-Z]).
@@ -374,7 +409,7 @@ function show_positions_of_char {
   echo "${posText:0:$((${#posText}-1))}"
 }
 
-# Sorts the characters of each token based onl the allowed characters and their positions in the provided separated list and as specified by the direction.
+## Sorts the characters of each token based onl the allowed characters and their positions in the provided separated list.
 function sort_chars_per_token {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"

@@ -1,10 +1,10 @@
 #!/bin/sh
 ################################################################################
-# Color Actions                                                                #
+# Screen Actions                                                               #
 #                                                                              #
-# A set of utility functions to conveniently manipulate the colors of the text #
+# A set of functions to conveniently present graphics and text on the screen   #
 # output inside the terminal as well as provide information about the          #
-# available colors.                                                            #
+# terminal's capabilities.                                                     #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash), and tput (if not included. #
@@ -51,7 +51,7 @@ function print_all_colors_horizontally {
     printf "$(tput setab $i)"
     [ ! -z $withNums ] && [ $withNums = true ] && printf " $i " || printf ' '
   done
-  __print_end_line
+  #__print_end_line
 }
 
 ## Print all colors supported by the terminal in order horizontally with the equivalent number on each.
@@ -65,13 +65,21 @@ function print_all_colors_vertically {
   for ((i=0;i<$(count_terminal_colors);i++)); do
     printf "$(tput setab $i)"
     [ ! -z $withNums ] && [ $withNums = true ] && printf " $i " || printf ' '
-    __print_end_line
+    #__print_end_line
   done
 }
 
 ## Print all colors supported by the terminal in order vertically with the equivalent number on each.
 function print_all_colors_vertically_with_nums {
   print_all_colors_vertically true
+}
+
+## Print a color only. 
+function print_color {
+  [ -z "$p_o_background" ] && __print_missing_parameter_error "background"
+  tput setab "$p_o_background"
+  printf " "
+  #__print_end_line
 }
 
 ## Print text in the screen with a specific font color and background color. 
@@ -82,7 +90,7 @@ function print_text_with_color_and_background {
   tput setaf "$p_o_color"
   tput setab "$p_o_background"
   printf "$p_o_text"
-  __print_end_line
+#  __print_end_line
 }
 
 [ -z "$1" ] && __print_usage
@@ -109,5 +117,7 @@ while getopts "ha:b:c:t:" o; do
     *) __print_usage ;;
   esac
 done
+[ -z "$p_r_action" ] && __print_incorrect_action_error
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
+__print_end_line

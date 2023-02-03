@@ -2,7 +2,8 @@
 ################################################################################
 # Help Actions                                                                 #
 #                                                                              #
-# Actions to analyze code and display help and documentation accordingly.      #
+# A set of functions to analyze code and display help and documentation        #
+# accordingly.                                                                 #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -158,5 +159,6 @@ while getopts "ha:t:p:" o; do
     *) print_actions_usage ;;
   esac
 done
+[ -z "$p_r_action" ] && __print_incorrect_action_error
 # Generic action call with positional parameters based on available ones.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || print_incorrect_action_error

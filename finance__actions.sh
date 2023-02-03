@@ -1,8 +1,8 @@
 #!/bin/sh
 ################################################################################
-# ~title of script here~                                                       #
+# Finance Actions                                                              #
 #                                                                              #
-# ~extensive description of script here~                                       #
+# A set of functions to perform financial calculations.                        #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -67,5 +67,6 @@ while getopts "ha:~getopts parameter string here~" o; do
     *) __print_usage ;;
   esac
 done
+[ -z "$p_r_action" ] && __print_incorrect_action_error:wqwqwwqwwwqww:wq
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error

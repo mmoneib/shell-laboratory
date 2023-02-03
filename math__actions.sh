@@ -1,12 +1,12 @@
 #!/bin/sh
 ################################################################################
-# ~title of script here~                                                       #
+# Math Actions                                                                 #
 #                                                                              #
-# ~extensive description of script here~                                       #
+# A set of functions to perform mathematical calculations on numbers.          #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     ~additional dependenies here~                                            #
+#     bc.                                                                      #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -34,16 +34,16 @@ function __print_incorrect_action_error {
   exit 1
 }
 
-## ~comment describing the action here~
-function ~action function name here~ {
-  [ -z "~parameter variable here~" ] && __print_missing_parameter_error ~parameter_name_here~
-  ~further validation of optional parameters or for types here~
-  ~repitition~
-  ~repitition~
-  ~action implementation here~
+## Calculate the average of the numbers provided in the separated list.
+function average_of {
+  [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "separated_list_text"
+  IFS=","; read -a numArr <<< "$p_o_separatedListText"
+  sum=0
+  for num in ${numArr[@]}; do
+    sum=$(echo "$sum+$num"|bc)
+  done
+  echo "scale=$p_o_scale;$sum/${#numArr[@]}"|bc
 }
-
-~repitition~
 
 [ -z "$1" ] && __print_usage
 # Check if input is piped.
@@ -54,18 +54,20 @@ if [ ! -z "$inp" ]; then
      ~input text parameter here~+="\n$inp"
   done
 fi
+p_o_scale=2
 # Parse options and parameters.
-while getopts "ha:~getopts parameter string here~" o; do
+while getopts "ha:l:s:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
-    ~description of parameter here~
-    ~parameter character here~) ~parameter variable here~=$OPTARG ;;
-    ~repitition~
-    ~repitition~
+    ## List of numbers separated by a comma.
+    l) p_o_separatedListText=$OPTARG ;;
+    ## Scale, like number of digits after the decimal point.
+    s) p_o_scale=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
 done
+[ -z "$p_r_action" ] && __print_incorrect_action_error
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
