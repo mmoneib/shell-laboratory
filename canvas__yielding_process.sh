@@ -28,7 +28,7 @@ horPos=0;
 verPos=0;
 
 function exitFunc {
- # Put the cursose at the lowest line in the screen and keep the text pre
+ # Put the cursose at the lowest line in the screen and keep the text present.
  tput cup $(tput lines) 0;
 }
 

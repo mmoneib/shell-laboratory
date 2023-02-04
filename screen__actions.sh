@@ -44,6 +44,17 @@ function count_terminal_colors {
   tput colors
 }
 
+## Should be called from a process initialized by tput clear to treat the screen as canvas.
+function paint_point {
+  [ -z "$p_o_grid" ] && __print_missing_parameter_error "grid"
+  [ -z "$p_o_background" ] && __print_missing_parameter_error "background"
+  [ -z "$p_o_horizontalPos" ]
+  [ -z "$p_o_verticalPos" ]
+  tput cup $p_o_verticalPos $p_o_horizontalPos
+  tput setab "$p_o_background"
+  printf " "
+}
+
 ## Print all colors supported by the terminal in order horizontally.
 function print_all_colors_horizontally {
   withNums=$1
@@ -103,7 +114,7 @@ if [ ! -z "$inp" ]; then
   done
 fi
 # Parse options and parameters.
-while getopts "ha:b:c:t:" o; do
+while getopts "ha:b:c:g:t:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -111,13 +122,29 @@ while getopts "ha:b:c:t:" o; do
     b) p_o_background=$OPTARG ;;
     ## The color of the text.
     c) p_o_color=$OPTARG ;;
+    ## Dimensions of the grid representing the screen in terms of sections. Example: 5*3. If available, h and v are expected to denote a sections.
+    g) p_o_grid=$OPTARG ;;
     ## The text to be printed on the screen,
     t) p_o_text=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
 done
+# Validate parameters.
 [ -z "$p_r_action" ] && __print_incorrect_action_error
+# Set parameters defaults.
+if [ ! -z "$p_o_grid" ]; then # Abstracting the screen's size into a virtual grid understood by the user. Allows virtual scaling and responsive design.
+  horizontalGrid="$(echo "$p_o_grid" | cut -d"*" -f 1)" 
+  verticalGrid="$(echo "$p_o_grid" | cut -d"*" -f 2)"
+  colsPerGrid=$((($(tput cols)/$horizontalGrid)))
+  [ -z "$p_o_horizontalPos" ] && p_o_horizontalPos=$(($horizontalGrid/2)) # To default close to center. No +1 as positions are zero-based.
+  p_o_horizontalPos=$(($colsPerGrid*$p_o_horizontalPos-($colsPerGrid/2)))
+  linesPerGrid=$((($(tput lines)/$verticalGrid)))
+  [ -z "$p_o_verticalPos" ] && p_o_verticalPos=$(($verticalGrid/2))  # To default close to center. No +1 as positions are zero-based.
+  p_o_verticalPos=$(($linesPerGrid*$p_o_verticalPos-($linesPerGrid/2)))
+echo "$linesPerGrid $p_o_verticalPos"
+fi
+
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
 __print_end_line

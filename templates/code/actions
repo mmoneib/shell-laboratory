@@ -61,7 +61,11 @@ while getopts "ha:~getopts parameter string here~" o; do
     *) __print_usage ;;
   esac
 done
+# Validate parameters.
 [ -z "$p_r_action" ] && _print_incorrect_action_error
+~further parameters validation here~
+# Set parameters defaults, if needed.
+~setting parameters defaults here~
 
 # Generic action call with protection against script injection.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || __print_incorrect_action_error
