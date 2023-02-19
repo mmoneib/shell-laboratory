@@ -2,7 +2,7 @@
 ################################################################################
 # ~title of script here!~                                                      #
 #                                                                              #
-# ~ectensive description of script here~                                       #
+# ~extensive description of script here~                                       #
 #                                                                              #
 # Type: Progressive Process.                                                   #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -48,7 +48,7 @@ function initialize_input {
   ~options validation here~
   ~d_ variables (mutable by process_data) initialization here~
   ~o_ variables (immutable) initialization here~
-  ~hooks for adding a certain behavour at a specific event (like trapping EXIT to clear)~
+  ~hooks for adding a certain behaviour at a specific event (like trapping EXIT to clear)~
 }
 
 function process_data {
