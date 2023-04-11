@@ -49,6 +49,9 @@ function initialize_input {
   c_o_noNums="false"
   c_o_noSpecial="false"
   c_o_size=12
+  altCapsParameterStmt="-a flip_case -t {1}"
+  rollCharsParameterStmt="-a roll_chars -t {1}"
+  mixCharsParameterStmt="-a mix_chars -t {1}"
   while getopts "ha:p:s:" o; do
     case "$o" in
     ## A string or file containing the personal alias alluding to the target. Example: personal_google_account, MyGmail...etc.
@@ -66,20 +69,45 @@ function initialize_input {
   [ -z "$c_r_alias" ] && echo "ERROR: Missing required parameter 'alias'." >&2
   [ -z "$c_r_secret" ] && echo "ERROR: Missing required parameter 'secret'." >&2
   [ -z "$c_r_procedures" ] && echo "ERROR: Missing required parameter 'procedures'." >&2
+  # Validation and stream preparation
   IFS=";"; read -a procedures  <<< "$c_r_procedures"
-  d_procedureTokens=()
+  commandsTokens=() # A single array provides flexibility as it is agnostic to the underlying commands and their order.
   for entry in "${procedures[@]}"; do
     IFS=","; read -a procedureTokens  <<< "$entry"
-    [ "${procedureTokens[1]}" == "alias" ] || [ "${procedureTokens[1]}" == "secret" ] || (echo "ERROR: Incorrect value of first parameter; must be either the word 'secret' or 'alias'." >&2 && exit 1)
-    #d_procedureTokens+=("${procedureTokens[1]}") # Indicating the variable to be manipulated by the commmand.
-    if [ "${procedureTokens[0]}" != "altCaps" ] || [ "${procedureTokens[0]}" != "rollChars" ] || [ "${procedureTokens[0]}" != "mixChars" ]; then
-      echo "ERROR: Incorrect name of a procedure." >&2
+    #commandsTokens+=("${procedureTokens[1]}") # Indicating the variable to be manipulated by the commmand.
+    if [ "${procedureTokens[0]}" != "altCaps" ] && [ "${procedureTokens[0]}" != "rollChars" ] && [ "${procedureTokens[0]}" != "mixChars" ]; then
+      echo "ERROR: Incorrect name of a procedure, ${procedureTokens[0]}'." >&2
       exit 1
+    elif [ "${procedureTokens[1]}" != "alias" ] && [ "${procedureTokens[1]}" != "secret" ]; then
+      echo "ERROR: Incorrect value of first parameter, ${procedureTokens[1]}; must be either the word 'secret' or 'alias'." >&2 && exit 1
     else
-      d_procedureTokens+=("COMMAND") # Separator to emulate 2D array.
+      commandsTokens+=("COMMAND") # Separator to emulate 2D array.
       for token in $entry; do
-        d_procedureTokens+=("$token")
+        commandsTokens+=("$token")
       done
+    fi
+  done
+  # Preparation of the commands.
+  paramsValues=""
+  isCommandStart="false"
+  oldCommandNameToPrepare="" # The one for which $paramsValues are being prepared.
+  currentCommandNameToPrepare=""
+  d_varsAndCommands=() # 
+  for ((i=0;i<${#commandsTokens[@]};i++)); do
+    [ "${commandsTokens[i]}" == "COMMAND" ] && isCommandStart="true" && continue
+    if [ "$isCommandStart" == "true" ]; then
+      oldCommandNameToPrepare="$currentCommandNameToPrepare"
+      currentCommandNameToPrepare="${commandsTokens[i]}"
+      if [ ! -z "$paramsValues" ]; then
+        #TODO Add the first variable as key and add the text of the full comman after replacing the placeholders.
+        paramStmtVar='$'"$oldCommandNameToPrepare""ParameterStmt" # Dynamic assignment of the command, for brevity.
+        paramStmt="$paramStmtVar"
+        d_varsAndCommands+=("$(eval echo $paramStmt)")
+        paramsValues=""
+      fi
+      isCommandStart="false"
+    else
+      paramsValues+="${commandsTokens[i]},"
     fi
   done
   d_secret="$c_r_secret"
@@ -87,36 +115,7 @@ function initialize_input {
 }
 
 function process_data {
-  for ((i=0;i<"${#d_procedureTokens[@]}";i++)) do
-    if [ "$d_procedureTokens[$i]" == "COMMAND" ]; do
-      i=$((i+1))
-      [ "${procedureTokens[$((i+1))]}" == "alias" ] || [ "${procedureTokens[$((i+1))]}" == "secret" ] || (echo "ERROR: Incorrect value of first parameter; must be either the word 'secret' or 'alias'." >&2 && exit 1)
-      if [ "${procedureTokens[$i]}" == "altCaps" ]; then
-        proceduresStatements+="$(sh string__actions.sh -a flip_case -t "${procedureTokens[$((i+1))]}")"
-        i=$(($i+1))
-      elif [ "${procedureTokens[$i]}" == "rollChars" ]; then
-        proceduresStatements+="$(sh string__actions.sh -a roll_chars -t "${procedureTokens[$((i+1))]}" -o "${procedureTokens[$((i+2))]}" -r [a-z,A-Z,0-9])"
-        i=$(($i+2))
-      elif [ "${procedureTokens[$i]}" == "mixChars" ]; then
-        procedureTokens[$i]="mix_chars"
-      else
-        echo "ERROR: Incorrect name of a procedure." >&2 && exit 1
-      fi
-    done
-
-    proceduresStatements+="${procedureTokens[1]}" # Indicating the variable to be manipulated by the commmand.
-    procedureTokens[1]="$c_r_${procedureTokens[1]}"
-
-  done
-
-
-echo "${proceduresStatements[@]}"
-  for ((i=0;i<"${#proceduresStatements[@]}";i+2)) do
-echo 1
-    result=eval "${proceduresStatements[(($i+1))]}"
-    echo "$result"
-    [ "${proceduresStatements[$i]}" == "secret" ] && d_secret="$result" || d_alias="$result"
-  done
+  echo "${d_varsAndCommands[@]}"
   #~processing of data here~
   #~processing of data continued here~
   #~o_ variables initialization here~
