@@ -8,13 +8,16 @@
 # Available procedures are:                                                    #
 #     Name: altCaps                                                            #
 #     Description: Alternate case of chars of a source.                        #
-#     Parameters: 0 for even capitals, 1 for odd ones.                         #
+#     Parameters: 1- "alias" or "secret" indicating the text to manipulate.    #
+#                 2- 0 for even capitals, 1 for odd ones.                      #
 #     Name: rollChars                                                          #
 #     Description: Similar to a Caesar cipher, rolling chars based on unicode. #
-#     Parameters: Integer specifying the steps of the roll.                    #
+#     Parameters: 1- "alias" or "secret" indicating the text to manipulate.    #
+#                 2- Integer specifying the steps of the roll.                 #
 #     Name: mixChars                                                           #
 #     Description: Insert char of another string after each char of source.    #
-#     Parameters: Other string.                                                # 
+#     Parameters: 1- "alias" or "secret" indicating the text to manipulate.    #
+#                 2- Other string, "alias" or "secret"                         # 
 # The order in which those procedures are specified is imporant and affects    #
 # the outcome passowrd. Each procedure produces a string which becomes the     #
 # input for the next one, starting with the alias as the source.               #
@@ -48,37 +51,86 @@ function initialize_input {
   c_o_size=12
   while getopts "ha:p:s:" o; do
     case "$o" in
-    ## A string or file containing the alias alluding to the target. Example: personal_google_account.
+    ## A string or file containing the personal alias alluding to the target. Example: personal_google_account, MyGmail...etc.
     a) c_r_alias=$OPTARG ;;
     ## The length of the password in chars. Defaults to 12.
     l) c_o_size=$OPTARG ;;
-    ## A comma-separated list string or file containing procedures and their parameters for character manipulation in the specified order.
+    ## A semicolon-separated list string or file containing procedures and their parameters (separated by comma) for character manipulation in the specified order.
     p) c_r_procedures=$OPTARG ;;
-    ## A string or file containing the secret text. 
+    ## A file containing the secret text. 
     s) c_r_secret=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
     esac
   done
-  ~options validation here~
-  ~d_ variables (mutable by process_data) initialization here~
-  ~o_ variables (immutable) initialization here~
-  ~hooks for adding a certain behavour at a specific event (like trapping EXIT to clear)~
+  [ -z "$c_r_alias" ] && echo "ERROR: Missing required parameter 'alias'." >&2
+  [ -z "$c_r_secret" ] && echo "ERROR: Missing required parameter 'secret'." >&2
+  [ -z "$c_r_procedures" ] && echo "ERROR: Missing required parameter 'procedures'." >&2
+  IFS=";"; read -a procedures  <<< "$c_r_procedures"
+  d_procedureTokens=()
+  for entry in "${procedures[@]}"; do
+    IFS=","; read -a procedureTokens  <<< "$entry"
+    [ "${procedureTokens[1]}" == "alias" ] || [ "${procedureTokens[1]}" == "secret" ] || (echo "ERROR: Incorrect value of first parameter; must be either the word 'secret' or 'alias'." >&2 && exit 1)
+    #d_procedureTokens+=("${procedureTokens[1]}") # Indicating the variable to be manipulated by the commmand.
+    if [ "${procedureTokens[0]}" != "altCaps" ] || [ "${procedureTokens[0]}" != "rollChars" ] || [ "${procedureTokens[0]}" != "mixChars" ]; then
+      echo "ERROR: Incorrect name of a procedure." >&2
+      exit 1
+    else
+      d_procedureTokens+=("COMMAND") # Separator to emulate 2D array.
+      for token in $entry; do
+        d_procedureTokens+=("$token")
+      done
+    fi
+  done
+  d_secret="$c_r_secret"
+  d_alias="$c_r_alias"
 }
 
 function process_data {
-  ~processing of data here~
-  output
-  ~processing of data continued here~
-  ~o_ variables initialization here~
+  for ((i=0;i<"${#d_procedureTokens[@]}";i++)) do
+    if [ "$d_procedureTokens[$i]" == "COMMAND" ]; do
+      i=$((i+1))
+      [ "${procedureTokens[$((i+1))]}" == "alias" ] || [ "${procedureTokens[$((i+1))]}" == "secret" ] || (echo "ERROR: Incorrect value of first parameter; must be either the word 'secret' or 'alias'." >&2 && exit 1)
+      if [ "${procedureTokens[$i]}" == "altCaps" ]; then
+        proceduresStatements+="$(sh string__actions.sh -a flip_case -t "${procedureTokens[$((i+1))]}")"
+        i=$(($i+1))
+      elif [ "${procedureTokens[$i]}" == "rollChars" ]; then
+        proceduresStatements+="$(sh string__actions.sh -a roll_chars -t "${procedureTokens[$((i+1))]}" -o "${procedureTokens[$((i+2))]}" -r [a-z,A-Z,0-9])"
+        i=$(($i+2))
+      elif [ "${procedureTokens[$i]}" == "mixChars" ]; then
+        procedureTokens[$i]="mix_chars"
+      else
+        echo "ERROR: Incorrect name of a procedure." >&2 && exit 1
+      fi
+    done
+
+    proceduresStatements+="${procedureTokens[1]}" # Indicating the variable to be manipulated by the commmand.
+    procedureTokens[1]="$c_r_${procedureTokens[1]}"
+
+  done
+
+
+echo "${proceduresStatements[@]}"
+  for ((i=0;i<"${#proceduresStatements[@]}";i+2)) do
+echo 1
+    result=eval "${proceduresStatements[(($i+1))]}"
+    echo "$result"
+    [ "${proceduresStatements[$i]}" == "secret" ] && d_secret="$result" || d_alias="$result"
+  done
+  #~processing of data here~
+  #~processing of data continued here~
+  #~o_ variables initialization here~
 }
 
 function pretty_output {
-  ~human readable and formatted output here~
+  #~human readable and formatted output here~
+  echo "Secret: $d_secret"
+  echo "Alias: $d_alias"
 }
 
 function raw_output {
-  ~plain data structural output here~
+  #~plain data structural output here~
+echo
 }
 
 function output {

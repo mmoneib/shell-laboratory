@@ -313,7 +313,7 @@ function roll_chars {
       done
     fi
     #echo "$newVal"
-    newChar="$($0 -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
+    newChar="$(sh string__actions.sh -a show_char_of_decimal -c "$newVal")" # Called externally due to null bytes by printf output being not allowed in command substitution $(). Expensive. #TODO Use read or truncate null bytes.
     outputText+="$newChar"
   done
   printf "$outputText\n"

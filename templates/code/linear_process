@@ -53,7 +53,6 @@ function initialize_input {
 
 function process_data {
   ~processing of data here~
-  output
   ~processing of data continued here~
   ~o_ variables initialization here~
 }
