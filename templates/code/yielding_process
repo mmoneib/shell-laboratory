@@ -64,5 +64,5 @@ function output {
   fi
 }
 
-initialize_input $@
+initialize_input "$@"
 process_data

@@ -9,7 +9,7 @@
 #     Name: altCaps                                                            #
 #     Description: Alternate case of chars of a source.                        #
 #     Parameters: 1- "alias" or "secret" indicating the text to manipulate.    #
-#                 2- 0 for even capitals, 1 for odd ones.                      #
+#                 2- "even" for even capitals, "odd" for odd ones.             #
 #     Name: rollChars                                                          #
 #     Description: Similar to a Caesar cipher, rolling chars based on unicode. #
 #     Parameters: 1- "alias" or "secret" indicating the text to manipulate.    #
@@ -30,6 +30,8 @@
 
 # Namspaces: c for config, d for data, and o for output.
 
+#TODO Propagate error messages to help__actions?
+
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
   exit
@@ -49,19 +51,19 @@ function initialize_input {
   c_o_noNums="false"
   c_o_noSpecial="false"
   c_o_size=12
-  altCapsParameterStmt="-a flip_case -t {1}"
-  rollCharsParameterStmt="-a roll_chars -t {1}"
+  altCapsParameterStmt="-a set_case_procedurally -t {1} -p {2]"
+  rollCharsParameterStmt="-a roll_chars -t {1} -o {2}"
   mixCharsParameterStmt="-a mix_chars -t {1}"
   while getopts "ha:p:s:" o; do
     case "$o" in
     ## A string or file containing the personal alias alluding to the target. Example: personal_google_account, MyGmail...etc.
-    a) c_r_alias=$OPTARG ;;
+    a) c_r_alias="$OPTARG" ;;
     ## The length of the password in chars. Defaults to 12.
-    l) c_o_size=$OPTARG ;;
+    l) c_o_size="$OPTARG" ;;
     ## A semicolon-separated list string or file containing procedures and their parameters (separated by comma) for character manipulation in the specified order.
-    p) c_r_procedures=$OPTARG ;;
+    p) c_r_procedures="$OPTARG" ;;
     ## A file containing the secret text. 
-    s) c_r_secret=$OPTARG ;;
+    s) c_r_secret="$OPTARG" ;;
     h) __print_help ;;
     *) __print_usage ;;
     esac
@@ -70,6 +72,8 @@ function initialize_input {
   [ -z "$c_r_secret" ] && echo "ERROR: Missing required parameter 'secret'." >&2
   [ -z "$c_r_procedures" ] && echo "ERROR: Missing required parameter 'procedures'." >&2
   # Validation and stream preparation
+  # TODO Move the validation to strings__actions action "contains" to loop over possibilities.
+  [ -z "$(echo "$c_r_procedures"|grep "mix_chars")" ] && echo "ERROR: One of the following procedures must be included for mixing aliases with secrets: mix_chars." >&2 && exit 1
   IFS=";"; read -a procedures  <<< "$c_r_procedures"
   commandsTokens=() # A single array provides flexibility as it is agnostic to the underlying commands and their order.
   for entry in "${procedures[@]}"; do
@@ -87,8 +91,11 @@ function initialize_input {
       done
     fi
   done
+  # To get the last command in the loop below without having to simulate a do-while.
+  commandsTokens+=("COMMAND") 
+  commandsTokens+=("DUMMY") # Much more readable than post-loop retrieval of the last element. Indirect Programming.
   # Preparation of the commands.
-  paramsValues=""
+  paramsValues=()
   isCommandStart="false"
   oldCommandNameToPrepare="" # The one for which $paramsValues are being prepared.
   currentCommandNameToPrepare=""
@@ -98,33 +105,43 @@ function initialize_input {
     if [ "$isCommandStart" == "true" ]; then
       oldCommandNameToPrepare="$currentCommandNameToPrepare"
       currentCommandNameToPrepare="${commandsTokens[i]}"
-      if [ ! -z "$paramsValues" ]; then
-        #TODO Add the first variable as key and add the text of the full comman after replacing the placeholders.
-        paramStmtVar='$'"$oldCommandNameToPrepare""ParameterStmt" # Dynamic assignment of the command, for brevity.
-        paramStmt="$paramStmtVar"
-        d_varsAndCommands+=("$(eval echo $paramStmt)")
-        paramsValues=""
+      if [ ${#paramsValues[@]} -gt 0 ]; then
+        paramStmtVar='$'"$oldCommandNameToPrepare""ParameterStmt" # Dynamic assignment of the command, for brevity. Metaprogramming.
+        d_varsAndCommands+=("${paramsValues[0]}") # Values secret or alias.
+        command=("$(eval echo $paramStmtVar)")
+        c=0
+        for param in ${paramsValues[@]}; do
+          ((c++))
+          if [ "$param" == "secret" ] || [ "$param" == "alias" ]; then
+            paramVar='$c_r_'"$param"
+            param="$(eval echo $paramVar)"
+          fi 
+          command=$(echo $command|sed "s/{$c}/\"$param\"/g")
+        done
+        d_varsAndCommands+=("$command")
+        paramsValues=()
       fi
       isCommandStart="false"
     else
-      paramsValues+="${commandsTokens[i]},"
+      paramsValues+=("${commandsTokens[i]}")
     fi
   done
-  d_secret="$c_r_secret"
-  d_alias="$c_r_alias"
 }
 
 function process_data {
-  echo "${d_varsAndCommands[@]}"
-  #~processing of data here~
-  #~processing of data continued here~
-  #~o_ variables initialization here~
+  for ((i=0;i<${#d_varsAndCommands[@]};i=i+2)); do
+    tmpResult="$(eval "sh string__actions.sh ${d_varsAndCommands[$((i+1))]}")"
+    eval "${d_varsAndCommands[$i]}=\"$tmpResult\""
+  done
+  o_secret="$secret"
+  o_alias="$alias"
+  o_result="$tmpResult" # The output result is the output of the last of procedures.
 }
 
 function pretty_output {
-  #~human readable and formatted output here~
-  echo "Secret: $d_secret"
-  echo "Alias: $d_alias"
+  echo "Manipulated Alias: $o_alias"
+  echo "Produced Secret: $o_secret"
+  echo "Produced Password: $o_result"
 }
 
 function raw_output {
@@ -140,6 +157,6 @@ function output {
   fi
 }
 
-initialize_input $@
+initialize_input "$@"
 process_data
 output

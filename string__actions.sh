@@ -14,6 +14,7 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 #TODO Add ignore case to all suitable actions.
+#TODO Add action for alternating caps.
 #TODO Update README to reflect preference to internal calls.
 #TODO Add documentation of preference of multiple calls at runtime than increased complexity.
 #TODO Add calculated replacement of chars from list.
@@ -319,12 +320,12 @@ function roll_chars {
   printf "$outputText\n"
 }
 
-## Set case of each character in the provided text based on its even or odd position, or based on a provided sequence of intervals; first position is 1 (not 0 based).
+## Set case of each character in the provided text based on its "even" or "odd" position, or based on a provided sequence of intervals; first position is 1 (not 0 based).
 function set_case_procedurally {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_offset" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "offset"
-  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_offset" ] && __print_missing_parameter_error "separatedListText"
+  [ -z "$p_o_position" ] && [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "position"
+  [ -z "$p_o_separatedListText" ] && [ -z "$p_o_position" ] && __print_missing_parameter_error "separatedListText"
   changedCaseText="";
   IFS=";"; read -a sequenceArr <<< "$p_o_separatedListText"
   IFS=""; while read l; do # IFS needed to preserve leading spaces.
@@ -333,13 +334,13 @@ function set_case_procedurally {
     for ((i=0;i<${#l};i++)); do # Reading per line in order to be able to detect newlines.
       c="${l:i:1}"
       p=$((i+1))
-      if [ "$p_o_offset" == "even" ] && [ $((p%2)) -eq 0 ]; then
+      if [ "$p_o_position" == "even" ] && [ $((p%2)) -eq 0 ]; then
         changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
-      elif [ "$p_o_offset" == "even" ] && [ $((p%2)) -ne 0 ]; then
+      elif [ "$p_o_position" == "even" ] && [ $((p%2)) -ne 0 ]; then
         changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
-      elif [ "$p_o_offset" == "odd" ] && [ $((p%2)) -eq 0 ]; then
+      elif [ "$p_o_position" == "odd" ] && [ $((p%2)) -eq 0 ]; then
         changedCaseText+=$(echo "$c"|sed "s/\(.\)/\L\1/g")
-      elif [ "$p_o_offset" == "odd" ] && [ $((p%2)) -ne 0 ]; then
+      elif [ "$p_o_position" == "odd" ] && [ $((p%2)) -ne 0 ]; then
         changedCaseText+=$(echo "$c"|sed "s/\(.\)/\U\1/g")
       else # The case for sequence.
         if [ "$nextSeqCheckPos" -eq "$i" ]; then
@@ -449,7 +450,7 @@ if [ ! -z "$inp" ]; then
   done 
 fi
 # Parse options and parameters.
-while getopts "ha:b:c:d:e:il:o:r:s:t:" o; do
+while getopts "ha:b:c:d:e:il:o:p:r:s:t:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -467,6 +468,8 @@ while getopts "ha:b:c:d:e:il:o:r:s:t:" o; do
     l) p_o_separatedListText=$OPTARG ;;
     ## Offset number indicating the distance between two elements in the string.
     o) p_o_offset=$OPTARG ;;
+    ## An indicator of a position, like "even" and "odd".
+    p) p_o_position=$OPTARG ;;
      #  [ "$OPTARG" -eq "$(echo $OPTARG | grep "^[0-9]*$")" ] || echo "ERROR: Incorrect parameter value for o." ;;
     ## A Regex range of characters enclosed in squared braces.
     r) p_o_range=$OPTARG ;;
