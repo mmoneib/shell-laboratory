@@ -14,7 +14,6 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 #TODO Add ignore case to all suitable actions.
-#TODO Add action for alternating caps.
 #TODO Update README to reflect preference to internal calls.
 #TODO Add documentation of preference of multiple calls at runtime than increased complexity.
 #TODO Add calculated replacement of chars from list.
@@ -320,6 +319,23 @@ function roll_chars {
   printf "$outputText\n"
 }
 
+## Mix the chars of each of the input texts alternatively into a new text.
+function mix_chars {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
+  [ -z "$p_o_text2" ] && __print_missing_parameter_error "text2"
+  [ -f "$p_o_text2" ] && p_o_text2="$(cat $p_o_text2)"
+  size1="${#p_o_text}"
+  size2="${#p_o_text2}"
+  [ "$size1" -ge "$size2" ] && size=$size1 || size=$size2
+  outputText=""
+  for ((i=0;i<$size;i++)); do
+    outputText+="${p_o_text:$(echo "$i%$size1"|bc):1}"
+    outputText+="${p_o_text2:$(echo "$i%$size2"|bc):1}"
+  done
+  printf "$outputText\n"
+}
+
 ## Set case of each character in the provided text based on its "even" or "odd" position, or based on a provided sequence of intervals; first position is 1 (not 0 based).
 function set_case_procedurally {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
@@ -450,7 +466,7 @@ if [ ! -z "$inp" ]; then
   done 
 fi
 # Parse options and parameters.
-while getopts "ha:b:c:d:e:il:o:p:r:s:t:" o; do
+while getopts "ha:b:c:d:e:il:o:p:r:s:t:T:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -477,6 +493,8 @@ while getopts "ha:b:c:d:e:il:o:p:r:s:t:" o; do
     s) p_o_sequence=$OPTARG ;;
     ## The text to be queried or manipulated. This can be a string specified via command line, or a path to a text file.
     t) p_o_text="$OPTARG" ;;
+    ## A second text to be used in the processing of the original text in order to manipulate it or mix with it.
+    T) p_o_text2="$OPTARG" ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
