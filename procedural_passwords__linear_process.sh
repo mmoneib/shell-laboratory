@@ -34,6 +34,7 @@
 # Namspaces: c for config, d for data, and o for output.
 
 #TODO Propagate error messages to help__actions?
+#TODO Limit char rolling to only alphabet and numbers.
 
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
@@ -134,6 +135,8 @@ function initialize_input {
 }
 
 function process_data {
+  d_secret="$(echo "$d_secret"|sed 's/\ /_/g')" # Replacing spaces with underscores.
+  d_alias="$(echo "$d_alias"|sed 's/\ /_/g')" # Replacing spaces with underscores.
   for ((i=0;i<${#d_varsAndCommands[@]};i=i+2)); do
     commandOpts="$(echo "${d_varsAndCommands[$((i+1))]}"|sed "s/\$d_secret/$d_secret/g"|sed "s/\$d_alias/$d_alias/g")"
     tmpResult="$(eval "sh string__actions.sh $commandOpts")"
