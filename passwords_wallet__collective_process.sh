@@ -1,6 +1,6 @@
 #!/bin/bash
 ################################################################################
-# Procedural Password (Re)Generator
+# Passwords Wallet
 #
 # Instead of remembering passwords or saving them on plain sight, this script
 # provides an opportunity to regenerate the desired password each time it is
@@ -21,6 +21,9 @@
 # Dependencies: Bash.                                                          #   
 # Developed by: Muhammad Moneib.                                               #
 ################################################################################
+
+# TODO Refactor as collective process to store and retrieve data and interfacing with Procedural Passwords.
+# TODO Update description
 
 target="www.google.com";
 quote=$(echo "$(cat resources/procedural_passwords/quote)"|sed 's/ //g');

@@ -1,6 +1,6 @@
 #!/bin/bash
 ################################################################################
-# Check Options Parameter                                                      #
+# Parameter Actions                                                            #
 #                                                                              #
 # Description: Parse parameters passed to the script in a customizable and     #
 # convenient way without shifting and without getopts.                         #
@@ -9,6 +9,8 @@
 # Dependencies: Bash                                                           #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
+
+# TODO Refactor as actions.
 
 cop_options=(); # Potential output.
 cop_hasOption=false; # Potential output.
