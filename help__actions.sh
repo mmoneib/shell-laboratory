@@ -66,7 +66,7 @@ function print_actions_help {
   while read l; do
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && requiredParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
-  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") p_r_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") p_r_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
   [ ! -z "$requiredParamsListText" ] && requiredParamsListText="\n\tRequired Parameters:\n${requiredParamsListText:0:$((${#requiredParamsListText}-2))}"
   optionalParamsListText=""
   description=""
@@ -74,7 +74,7 @@ function print_actions_help {
   while read l; do
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && optionalParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
-  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") p_o_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") p_o_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\().*\)/\1/g")"
   [ ! -z "$optionalParamsListText" ] && optionalParamsListText="\n\tOptional Parameters:\n${optionalParamsListText:0:$((${#optionalParamsListText}-2))}"
   actionsListText="\n\tActions:\n"
   while read l; do
@@ -98,7 +98,7 @@ function print_actions_help {
       [ ! -z "$func" ] && actionParamMatrix+="\t\t$func --> "
     elif [ "${l:0:9}"  == "[ -z \"\$p_" ]; then
       param="$(echo $l|sed "s/\(^ *\[ -z \"\\$\)\(p_._[^\"]*\)\(.*$\)/\2/g")"
-      param="$(grep ".) $param" $p_o_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
+      param="$(grep ".) $param=" $p_o_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
       [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
     elif [ "$l" == "}" ]; then
       [ ! -z "$func" ] && actionParamMatrix=${actionParamMatrix:0:$((${#actionParaMatrix}-1))}"\n"
@@ -129,7 +129,7 @@ function print_process_help {
   while read l; do
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && requiredParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
-  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_r_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_r_.*\)/\1/g")"
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_r_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_r_.*\)/\1/g")"
   [ ! -z "$requiredParamsListText" ] && requiredParamsListText="\n\tRequired Parameters:\n${requiredParamsListText:0:$((${#requiredParamsListText}-2))}"
   optionalParamsListText=""
   description=""
@@ -137,7 +137,7 @@ function print_process_help {
   while read l; do
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && optionalParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
-  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_o_"|grep -v "\-\-"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_o_.*\)/\1/g")"
+  done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_o_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_o_.*\)/\1/g")"
   [ ! -z "$optionalParamsListText" ] && optionalParamsListText="\n\tOptional Parameters:\n${optionalParamsListText:0:$((${#optionalParamsListText}-2))}"
   helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText"
   printf "$helpText"
