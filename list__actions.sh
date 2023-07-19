@@ -13,8 +13,6 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
-# TODO Add support for lists with separators.
-
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
   exit
@@ -53,7 +51,7 @@ function get_random_line {
 
 # Gets a list of rows, each containing a token separated from the string of tokens separated by the separator.
 function get_list_from_separated_list {
-  [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "text"
+  [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "separated_list_text"
   [ -f "$p_o_separatedListText" ] && p_o_separatedListText="$(cat $p_o_separatedListText)"
   [ -z "$p_o_separator" ] && __print_missing_parameter_error "separator"
   text="$(echo "$p_o_separatedListText"|sed "s/$p_o_separator/\n/g")"
