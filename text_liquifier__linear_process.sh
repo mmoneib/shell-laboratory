@@ -44,8 +44,8 @@ function initialize_input {
   c_o_columnsLimitation=0
   d_horCenter=$((d_numScreenColumns/2))
   d_verCenter=$((d_numScreenLines/2))
-  c_horStartFunc='$((d_horCenter-(d_numOfColumns/2)))'
-  c_verStartFunc='$((d_verCenter-(numOfLines/2)))'0
+  c_o_horizontalAlignment="center"
+  c_o_verticalAlignment="center"
   d_text=""
   [ -z "$1" ] && __print_usage
   # Check if input is piped.
@@ -56,7 +56,7 @@ function initialize_input {
       c_r_text+="\n$inp"
     done
   fi
-  while getopts f:z:v:l:r:b:h o; do
+  while getopts t:z:v:l:r:b:h o; do
     case $o in
       ## Path of the input file.
       t) c_r_text="$OPTARG" ;;
@@ -64,7 +64,7 @@ function initialize_input {
       b) c_o_columnsLimitation="$OPTARG" ;;
       ## Horizontal alignment. Must be either 'left', 'center', or 'right'. Default is 'center'.
       z) c_o_horizontalAlignment="$OPTARG" ;;
-      ## Vertical alignment. Must be either 'top', 'center', or 'botton'. Default is 'center'.
+      ## Vertical alignment. Must be either 'top', 'center', or 'bottom'. Default is 'center'.
       v) c_o_verticalAlignment="$OPTARG" ;;
       ## Left padding symbol. Must be a single character enclose by double quotations. Default is space.
       l) c_o_leftPaddingSymbol="$OPTARG" ;;
@@ -87,31 +87,31 @@ function initialize_input {
     __print_incorrect_parameter_value_error "$c_o_horizontalAlignment" "horizontal_alignment"
   fi 
   # Polymorphism
-  if [[ "$v_horizontalAlignment" == "top" ]]; then
-    d_verStartFunc='$(echo 0)'
-  elif [[ "$v_horizontalAlignment" == "center" ]]; then
+  if [[ "$c_o_verticalAlignment" == "top" ]]; then
+   d_verStartFunc='$(echo 0)'
+  elif [[ "$c_o_verticalAlignment" == "center" ]]; then
     d_verStartFunc='$((d_verCenter-(numOfLines/2)))'
-  elif [[ "$v_horizontalAlignment" == "bottom" ]]; then
+  elif [[ "$c_o_verticalAlignment" == "bottom" ]]; then
     d_verStartFunc='$((d_numScreenLines-numOfLines))'
   else
     __print_incorrect_parameter_value_error "$c_o_verticalAlignment" "vertical_alignment"
   fi
-  (($c_o_leftPaddingSymbol>1)) &&  __print_incorrect_parameter_value_error "$c_o_leftPaddingSymbol" "left_padding_symbol"
+  [ -z "$c_o_leftPaddingSymbol" ] && [ "$c_o_leftPaddingSymbol" -gt "1" ] &&  __print_incorrect_parameter_value_error "$c_o_leftPaddingSymbol" "left_padding_symbol"
 } 
 
 function process_data {
   o_lines=()
-  while read -n $((d_numScreenColumns-c_o_columnsLimitation)) inp; do # Partitioning into lines fitting the screen.
+  while read -n $((c_o_columnsLimitation)) inp; do # Partitioning into lines fitting the screen.
     lines+=("$inp")
   done <<< "$d_text"
   numOfLines=${#lines[@]};
-  verStart=$(eval echo $c_verStartFunc);
+  verStart=$(eval echo $d_verStartFunc);
   for ((l=0;l<d_numScreenLines;l++)); do
     o_lines[l]=""
     if (("$verStart"<="$l")) && (("$l"<"$verStart"+numOfLines)); then
       currentLine=${lines[(($l-$verStart))]}; # Relative to the populated lines.
       d_numOfColumns=${#currentLine} # Number of characters in the current line.
-      horStart=$(eval echo $c_horStartFunc);
+      horStart=$(eval echo $d_horStartFunc);
       for ((c=0;c<d_numScreenColumns;c++)); do
         if (("$horStart"<="$c")) && (("$c"<"$horStart"+d_numOfColumns)); then
           o_lines[l]+="${currentLine:((c-horStart)):1}"; # Relative to the populated characters.
