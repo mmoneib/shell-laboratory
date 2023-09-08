@@ -373,13 +373,13 @@ function set_case_procedurally {
   printf "$changedCaseText";
 }
 
-## Reduce the provided text to a separated list of the tokens (defaults to words) included based on the regex range provided (defaults to [^a-zA-Z0-9]).
+## Reduce the provided text to a vertical list of tokens (defaults to words) included based on the regex range provided (defaults to [^a-zA-Z0-9']).
 function separate_tokens {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -f "$p_o_text" ] && p_o_text="$(cat $p_o_text)"
-  [ -z "$p_o_range" ] && p_o_range="[^a-zA-Z0-9]"
-  outputText=$(echo "$p_o_text" | sed "s/$p_o_range/,/g"|tr "\n" ,|sed "s/,,/,/g"|sed "s/,,/,/g") # Same call at end because , has special behaviour of separating characters.
-  echo "$outputText"
+  [ -z "$p_o_range" ] && p_o_range="[^a-zA-Z0-9']" # The ^ symbol is used for negation of whatever is not included in the range; hence, symbols.
+  outputText=$(echo "$p_o_text" | sed "s/$p_o_range/\t/g"|tr "\t" "\n")
+  echo "$outputText"|grep "."
 }
 
 ## Shows the char value of the character supplied as a decimal number.
