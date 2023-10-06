@@ -1,12 +1,12 @@
 #!/bin/sh
 ################################################################################
-# ~subject of script here~ Actions                                             #
+# Network Actions                                                              #
 #                                                                              #
-# ~extensive description of script here~                                       #
+# A set of functions to perform analysis and manipulation of the network.      #
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     ~additional dependenies here~                                            #
+#     ifconfig, nmap                                                           #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -34,29 +34,17 @@ function __print_incorrect_action_error {
   exit 1
 }
 
-## ~comment describing the action here~
-function ~action function name here~ {
-  [ -z "~parameter variable here~" ] && __print_missing_parameter_error ~parameter_name_here~
-  ~further validation of optional parameters or for types here~
-  ~action implementation here~
+## Get IP of the current host (IPv4)
+function get_ip_v4_of_current_host {
+  echo "$(ifconfig|grep -v 127.0.0.1|grep -v inet6|grep inet|sed "s/^\ *//g"|cut -d " " -f 2)"
 }
 
 [ -z "$1" ] && __print_usage
-# Check if input is piped.
-read -t 0.1 inp; # Doesn't read more than a line.
-if [ ! -z "$inp" ]; then
-  ~input text parameter here~="$inp"
-  while read inp; do
-     ~input text parameter here~+="\n$inp"
-  done
-fi
 # Parse options and parameters.
 while getopts "ha:~getopts parameter string here~" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
-    ~description of parameter here~
-    ~parameter character here~) ~parameter variable here~=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
