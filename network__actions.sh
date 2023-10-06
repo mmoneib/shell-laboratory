@@ -39,6 +39,12 @@ function get_ip_v4_of_current_host {
   echo "$(ifconfig|grep -v 127.0.0.1|grep -v inet6|grep inet|sed "s/^\ *//g"|cut -d " " -f 2)"
 }
 
+## Get IP of the current host (IPv16)
+function get_ip_v16_of_current_host {
+  echo "$(ifconfig|grep inet6|grep -v "::1"|sed "s/^\ *//g"|cut -d " " -f 2)"
+}
+
+
 [ -z "$1" ] && __print_usage
 # Parse options and parameters.
 while getopts "ha:~getopts parameter string here~" o; do
