@@ -34,6 +34,11 @@ function __print_incorrect_action_error {
   exit 1
 }
 
+## Get IP of default gateway
+function get_ip_of_default_gateway {
+  echo "$(ip route|grep default|head -1|sed "s/default via //g"|cut -d " " -f 1)"
+}
+
 ## Get IP of the current host (IPv4)
 function get_ip_v4_of_current_host {
   echo "$(ifconfig|grep -v 127.0.0.1|grep -v inet6|grep inet|sed "s/^\ *//g"|cut -d " " -f 2)"
@@ -44,6 +49,10 @@ function get_ip_v16_of_current_host {
   echo "$(ifconfig|grep inet6|grep -v "::1"|sed "s/^\ *//g"|cut -d " " -f 2)"
 }
 
+## Get IP/Mask of current subnet
+function get_ip_with_mask_of_current_subnet {
+  echo "$(ip route|grep default -A 1|head -2|tail -1|cut -d " " -f 1)"
+}
 
 [ -z "$1" ] && __print_usage
 # Parse options and parameters.
