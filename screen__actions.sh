@@ -50,6 +50,7 @@ function paint_point {
   [ -z "$p_o_background" ] && __print_missing_parameter_error "background"
   [ -z "$p_o_horizontalPos" ]
   [ -z "$p_o_verticalPos" ]
+  echo "A $p_o_verticalPos $p_o_horizontalPos"
   tput cup $p_o_verticalPos $p_o_horizontalPos
   tput setab "$p_o_background"
   printf " "
@@ -137,11 +138,11 @@ if [ ! -z "$p_o_grid" ]; then # Abstracting the screen's size into a virtual gri
   horizontalGrid="$(echo "$p_o_grid" | cut -d"*" -f 1)" 
   verticalGrid="$(echo "$p_o_grid" | cut -d"*" -f 2)"
   colsPerGrid=$((($(tput cols)/$horizontalGrid)))
-  [ -z "$p_o_horizontalPos" ] && p_o_horizontalPos=$(($horizontalGrid/2)) # To default close to center. No +1 as positions are zero-based.
-  p_o_horizontalPos=$(($colsPerGrid*$p_o_horizontalPos-($colsPerGrid/2)))
+  [ -z "$p_o_horizontalPos" ] && p_o_horizontalPos=$(($colsPerGrid*$horizontalGrid/2)) # To default close to center. No +1 as positions are zero-based.
+  [ "$(($horizontalGrid%2))" != "0" ] && p_o_horizontalPos=$(($p_o_horizontalPos+($colsPerGrid/2))) # Add half a grid space in case of odd grid size.
   linesPerGrid=$((($(tput lines)/$verticalGrid)))
-  [ -z "$p_o_verticalPos" ] && p_o_verticalPos=$(($verticalGrid/2))  # To default close to center. No +1 as positions are zero-based.
-  p_o_verticalPos=$(($linesPerGrid*$p_o_verticalPos-($linesPerGrid/2)))
+  [ -z "$p_o_verticalPos" ] && p_o_verticalPos=$(($linesPerGrid*$verticalGrid/2))  # To default close to center. No +1 as positions are zero-based.
+  [ "$(($verticalGrid%2))" != "0" ] && p_o_verticalPos=$(($p_o_verticalPos+($linesPerGrid/2))) # Add half a grid space in case of odd grid size.
 echo "$linesPerGrid $p_o_verticalPos"
 fi
 
