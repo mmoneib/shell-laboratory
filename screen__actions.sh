@@ -15,6 +15,11 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
+#TODO Add painting a line based on 2 grid spaces.
+#TODO Add painting by filling the whole grid space instead of a point.
+#TODO Add painnting a circle.
+#TODO Add painting a shape based on a resource file.
+
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
   exit
