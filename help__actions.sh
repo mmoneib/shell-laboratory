@@ -7,7 +7,6 @@
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     ~additional dependenies here~                                            #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -32,7 +31,7 @@ function print_missing_parameter_error {
 function print_actions_usage {
  [ -z "$p_o_fileContent" ] && p_o_fileContent="$(basename $0)"
  function __print_usage {
-   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g" |sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g"# |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
+   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g" |sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\1_\2/g"# |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
  }
  requiredOptionsText="$(__print_usage 'p_r_')"
  optionalOptionsText="$(__print_usage 'p_o_')"
