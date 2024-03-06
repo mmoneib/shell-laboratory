@@ -2,7 +2,7 @@
 ################################################################################
 # ~title of script here!~                                                      #
 #                                                                              #
-# ~ectensive description of script here~                                       #
+# ~extensive description of script here~                                       #
 #                                                                              #
 # Type: Progressive Process.                                                   #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
@@ -11,6 +11,11 @@
 ################################################################################
 
 # Namspaces: c for config, d for data, and o for output.
+
+function __print_incorrect_parameter_value_error {
+  echo "Validation Error: The provided value $1 is not supported by this parameter $2. Please check Help for more info.">&2
+  exit 1
+}
 
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
@@ -38,7 +43,7 @@ function initialize_input {
   ~options validation here~
   ~d_ variables (mutable by process_data) initialization here~
   ~o_ variables (immutable) initialization here~
-  ~hooks for adding a certain behavour at a specific event (like trapping EXIT to clear)~
+  ~hooks for adding a certain behaviour at a specific event (like trapping EXIT to clear)~
 }
 
 function process_data {
