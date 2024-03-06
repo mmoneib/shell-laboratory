@@ -18,7 +18,10 @@
 #TODO Add support to strings to be combined like chars.
 #TODO Add optional criteria to evaluate output.
 #TODO Add option to suppress undesired output from the action.
-#TODO Add masking/
+#TODO Add masking.
+#TODO Add restore search from word.
+#TODO Add count as optional to action formation.
+#TODO Add support to different brute force strategies: Truth Table, Scrambler, Fat Finger...etc.
 
 function __print_incorrect_parameter_value_error {
   echo "Validation Error: The provided value '$1' is not supported by this parameter '$2'. Please check Help for more info.">&2
@@ -40,7 +43,7 @@ function initialize_input {
     __print_usage
   fi
   c_o_action="echo word_here"
-  while getopts "ha:c:m:x:" o; do
+  while getopts "ha:c:m:x:v" o; do
     case "$o" in
     ## The action to be invoked with each word, specified by "word_here", as its input. Defaults to "echo word_here".
     a) c_o_action=$OPTARG ;;
@@ -48,6 +51,8 @@ function initialize_input {
     c) c_r_chars=$OPTARG ;;
     ## Minumum size in characters of the word to be guessed. Must be greater than zero.
     m) c_r_minimumSizeOfWord=$OPTARG ;;
+    ## Verbose: Print each count and the corresponding word. If the action is included, each pair will be before it.
+    v) c_o_verbose=true ;;
     ## Maximum size in characters of the word to be guessed. Must be greater than zero and the minimum.
     x) c_r_maximumSizeOfWord=$OPTARG ;;
     h) __print_help ;;
@@ -56,7 +61,7 @@ function initialize_input {
   done
   [ $c_r_minimumSizeOfWord -le 0 ] && __print_incorrect_parameter_value_error  "$c_r_minimumSizeOfWord" "minimum_size_of_word"
   [ $c_r_maximumSizeOfWord -le 0 ] && __print_incorrect_parameter_value_error  "$c_r_maximumSizeOfWord" "maximum_size_of_word"
-  [ $c_r_maximumSizeOfWord -le $c_r_minimumSizeOfWord ] && __print_incorrect_parameter_value_error  "$c_r_maximumSizeOfWord" "maximum_size_of_word"
+  [ $c_r_maximumSizeOfWord -lt $c_r_minimumSizeOfWord ] && __print_incorrect_parameter_value_error  "$c_r_maximumSizeOfWord" "maximum_size_of_word"
   [ -z "$(echo "$c_o_action"|grep "word_here")" ] && __print_incorrect_parameter_value_error  "$c_o_action" "action"
   d_chars=()
   for ((i=0; i<${#c_r_chars};i++)) do
@@ -77,6 +82,9 @@ function process_data {
         d_word="${d_chars[(( (d_count/(d_sizeOfSelection**i))%d_sizeOfSelection ))]}$d_word" # Truth table
       done
       o_word="$d_word"
+      if [ $c_o_verbose ]; then
+        o_count=$d_count
+      fi
       output
       d_word=""
       d_count=$((d_count+1))
@@ -86,6 +94,7 @@ function process_data {
 }
 
 function output {
+  [ $c_o_verbose ] && echo "$o_count -- $o_word"
   eval $o_action
 }
 
