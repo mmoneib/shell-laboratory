@@ -20,6 +20,7 @@
 #TODO Validate options types.
 #TODO Modify horizontal and vertical starts options to allow for arbitrary numbers.
 #TODO Add ability to have lines widths controlled by a mathematical functions to allow liquification into shapes.
+#TODO Add frames.
 
 function __print_incorrect_parameter_value_error {
   echo "Validation Error: The provided value $1 is not supported by this parameter $2. Please check Help for more info.">&2
