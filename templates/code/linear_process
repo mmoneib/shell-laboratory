@@ -10,7 +10,7 @@
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
-# Namspaces: c for config, d for data, and o for output.
+# Namspaces: c_r for required config, c_o for opritonal config, d for data, and o for output.
 
 # Sourcing from anywhere.
 scriptFile=$0
@@ -66,7 +66,7 @@ function raw_output {
 }
 
 function output {
-  if [ $c_isRawOutput ]; then
+  if [ $c_o_isRawOutput ]; then
     raw_output
   else
     pretty_output

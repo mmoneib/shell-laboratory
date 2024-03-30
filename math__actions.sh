@@ -35,7 +35,7 @@ function __print_incorrect_action_error {
 }
 
 ## Calculate the average of the numbers provided in the separated list.
-function average_of {
+function average {
   [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "separated_list_text"
   IFS=","; read -a numArr <<< "$p_o_separatedListText"
   sum=0
@@ -43,6 +43,17 @@ function average_of {
     sum=$(echo "$sum+$num"|bc)
   done
   echo "scale=$p_o_scale;$sum/${#numArr[@]}"|bc
+}
+
+## Calculate the summation of the numbers provided in the separated list.
+function sum {
+  [ -z "$p_o_separatedListText" ] && __print_missing_parameter_error "separated_list_text"
+  IFS=","; read -a numArr <<< "$p_o_separatedListText"
+  sum=0
+  for num in ${numArr[@]}; do
+    sum=$(echo "$sum+$num"|bc)
+  done
+  echo "scale=$p_o_scale;$sum"|bc
 }
 
 [ -z "$1" ] && __print_usage

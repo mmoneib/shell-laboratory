@@ -480,7 +480,7 @@ while getopts "ha:b:c:d:e:il:o:p:r:s:t:T:" o; do
     e) p_o_end=$OPTARG ;;
     ## A flag to become case-insensitive while querying. If the option is present, the flag is true; otherwise, false.
     i) p_o_ignoreCase="true" ;;
-    ## A string in the form of a list separated by the serparator, which defaults to ai semi-colon.
+    ## A string in the form of a list separated by the serparator, which defaults to a semi-colon.
     l) p_o_separatedListText=$OPTARG ;;
     ## Offset number indicating the distance between two elements in the string.
     o) p_o_offset=$OPTARG ;;
