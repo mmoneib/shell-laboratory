@@ -87,7 +87,7 @@ function output {
   if [ $c_o_isRawOutput ]; then
     template="$o_command,$commandReportText\n"
   else
-    template="Processed Command:\n$o_command\nOutput:\n$o_commandOutput\nReport:\n$c_r_parameterFunctionsList\n$commandReportText\n"
+    template="Processed Command:\n$o_command\nOutput:\n$o_commandOutput\nReport:\n$c_o_parameterNamesList\n$c_r_parameterFunctionsList\n$commandReportText\n"
   fi
   printf "$template"
 }
