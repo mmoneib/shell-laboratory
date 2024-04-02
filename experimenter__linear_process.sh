@@ -14,6 +14,8 @@
 
 # Namspaces: c_r for required config, c_o for opritonal config, d for data, and o for output.
 
+#TODO Save output without DEBUG to default path with a descriptive filename.
+
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
   exit
@@ -56,32 +58,32 @@ function initialize_input {
 }
 
 function process_data {
-for (( t=0; t<${#d_parameterValuesLists[@]}; t++ )); do
-  command="$(./string__actions.sh -a replace_positional_placeholders -t "$c_r_command" -l "${d_parameterValuesLists[$t]}")"
-  [ ! -z $c_o_isDebug ] && echo "DEBUG(evaluated_command): $command"
-  allOutput=""
-  for (( i=0; i<c_r_numOfIterations; i++ )); do
-    output="$(eval "$command"|tail -1)"
-    allOutput="$allOutput$output\n"
-    [ ! -z $c_o_isDebug ] && echo "DEBUG(command_iterative_count): $i"
-    [ ! -z $c_o_isDebug ] && echo "DEBUG(output_count): $o_count"
-    [ ! -z $c_o_isDebug ] && echo "DEBUG(command_iterative_output): $output"
-  done
-  toBeAggregatedList=()
-  while read line; do
-    IFS=, read -a tokens <<< "$line"
-    for (( i=0; i<${#tokens[@]}; i++ )); do
-      toBeAggregatedLists[$i]+="${tokens[$i]},"
+  for (( t=0; t<${#d_parameterValuesLists[@]}; t++ )); do
+    command="$(./string__actions.sh -a replace_positional_placeholders -t "$c_r_command" -l "${d_parameterValuesLists[$t]}")"
+    [ ! -z $c_o_isDebug ] && echo "DEBUG(evaluated_command): $command"
+    allOutput=""
+    for (( i=0; i<c_r_numOfIterations; i++ )); do
+      output="$(eval "$command"|tail -1)"
+      allOutput="$allOutput$output\n"
+      [ ! -z $c_o_isDebug ] && echo "DEBUG(command_iterative_count): $i"
+      [ ! -z $c_o_isDebug ] && echo "DEBUG(output_count): $o_count"
+      [ ! -z $c_o_isDebug ] && echo "DEBUG(command_iterative_output): $output"
     done
-  done <<< "$(printf $allOutput)" # Using "printf" allows "read" to interpret \n as new line. 
-  o_commandReport=()
-  for (( i=0; i<${#d_parameterFunctionsLists[@]}; i++ )); do
-    o_commandReport[$i]="$(./math__actions.sh -a ${d_parameterFunctionsLists[$i]} -l ${toBeAggregatedLists[$i]})"
+    toBeAggregatedLists=()
+    while read line; do
+      IFS=, read -a tokens <<< "$line"
+      for (( i=0; i<${#tokens[@]}; i++ )); do
+        toBeAggregatedLists[$i]+="${tokens[$i]},"
+      done
+    done <<< "$(printf $allOutput)" # Using "printf" allows "read" to interpret \n as new line. 
+    o_commandReport=()
+    for (( i=0; i<${#d_parameterFunctionsLists[@]}; i++ )); do
+      o_commandReport[$i]="$(./math__actions.sh -a ${d_parameterFunctionsLists[$i]} -l ${toBeAggregatedLists[$i]})"
+    done
+    o_command="$command"
+    o_commandOutput="${allOutput:0:$(( ${#allOutput}-2 ))}" # Removes "\n"
+    output
   done
-  o_command="$command"
-  o_commandOutput="${allOutput:0:$(( ${#allOutput}-2 ))}" # Removes "\n"
-  output
-done
 }
 
 function output {
