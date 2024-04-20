@@ -36,7 +36,7 @@ trap exitFunc EXIT;
 
 # Prevent parsing of input. Mainly for printing space here.
 IFS=''
-# Prevent echoing control characters. Mainly when reading is done, pressing arrows woulf print control.
+# Prevent echoing control characters. Mainly when reading is done, pressing arrows would print control.
 stty -echoctl
 
 while read -rsn1 inp; do
