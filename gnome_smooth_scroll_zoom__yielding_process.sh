@@ -23,6 +23,10 @@
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
+# TODO Migrate to a yielding process format.
+# TODO Graceful exit.
+# TODO Better keys combination for activation.
+
 kbd=;
 magOnOff=false;
 magFactor=1.0;
@@ -31,8 +35,9 @@ userID=$(id -u $user); # Gets the user's numeric ID,
 
 function initializeGnomeMagnifierSettings {
   magFactor=1.0;
-  # The gsettings program needs to be run as the user and not root. Also, it requires the address' env variable. Using sude -E wasn't enough due to inner references.
-  sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
+  # The gsettings program needs to be run as the user and not root. Also, it requires the address' env variable. Using sudo -E wasn't enough due to inner references.
+  #sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" 
+gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
   switchGnomeMagnifierOnOff;
 }
 
@@ -43,7 +48,8 @@ function switchGnomeMagnifierOnOff {
   else
     magOnOff=false;
   fi
-  sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" gsettings set org.gnome.desktop.a11y.applications screen-magnifier-enabled $magOnOff;
+#  sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" 
+gsettings set org.gnome.desktop.a11y.applications screen-magnifier-enabled $magOnOff;
   if [[ $magOnOff == false ]]; then
     pkill -P $$; # Kill current process and all its children.
   fi
@@ -67,7 +73,8 @@ function zoomMouseEventDetect { # Forked and piped, so all (even global which ar
           magFactor=1;
         fi
       fi 
-      sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
+#      sudo -u $user DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$userID/bus" 
+gsettings set org.gnome.desktop.a11y.magnifier mag-factor $magFactor;
     done
     read -t 0.5 -N 10000; # Flushing the accumulated date to read anew, because the input is buffered until read. :-/ Not optimal solution.
     stream=true;
@@ -99,8 +106,8 @@ initializeGnomeMagnifierSettings;
 tryToDetectKeyboard;
 # stdbuf is used to remove the buffering and allow detection of the continuous stream.
 # The & is for forking the child process as the mouse detection of libinput produces more events.
-(stdbuf -oL libinput debug-events | stdbuf -oL grep "POINTER_SCROLL_WHEEL" | zoomMouseEventDetect)&  # 2nd script-specific sub-process as shown by echo "$BASHPID".
-stdbuf -oL libinput debug-events $kbd --show-keycodes | stdbuf -oL grep "KEY_LEFTALT" | zoomKeyboardEventDetect; # Main (top) process as shown by echo $$.
+(stdbuf -oL sudo libinput debug-events | stdbuf -oL grep "POINTER_SCROLL_WHEEL" | zoomMouseEventDetect)&  # 2nd script-specific sub-process as shown by echo "$BASHPID".
+stdbuf -oL sudo libinput debug-events $kbd --show-keycodes | stdbuf -oL grep "KEY_LEFTALT" | zoomKeyboardEventDetect; # Main (top) process as shown by echo $$.
 
 #TODO Add hot support for lense mode.
 #TODO Add touchpad and touch screen pinching support.
