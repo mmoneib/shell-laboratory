@@ -25,29 +25,29 @@ function initialize_input {
   if [ -z $1 ]; then # Case of no options at all.
     __print_usage
   fi
-  ~c_ variables defaults here~
-  while getopts "h~getopts parameter string here" o; do
+  #~c_ variables defaults here~
+  while getopts "hl:" o; do
     case "$o" in
-    ~description of parameter here~
-    ~parameter character here~) ~c_ parameter variable (immutable) here~=$OPTARG ;;
+    ## List of values separated by spaces.
+    l) c_r_listOfValues=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
     esac
   done
-  ~options validation here~
-  ~d_ variables (mutable by process_data) initialization here~
-  ~o_ variables (immutable) initialization here~
-  ~hooks for adding a certain behaviour at a specific event (like trapping EXIT to clear)~
+  #~options validation here~
+  d_listOfValues=($c_r_listOfValues)
+  #~o_ variables (immutable) initialization here~
+  o_output=""
+  #~hooks for adding a certain behaviour at a specific event (like trapping EXIT to clear)~
 }
 
 function process_data {
-nums=( 333 43 531 -1000 5233 6 1299 34 15 6 767)
   width=$(tput cols)
   negativeWidth=0
   normalizedMax=0
   max=0
   min=0
-  for i in ${nums[@]}; do
+  for i in ${d_listOfValues[@]}; do
     [ $max -lt $i ] && max=$i
     [ $min -gt $i ] && min=$i
   done
@@ -56,42 +56,30 @@ nums=( 333 43 531 -1000 5233 6 1299 34 15 6 767)
     negativeWidth=$(( $width/2 ))
   fi
   width=$(( $width-$negativeWidth ))
-  for i in ${nums[@]}; do
+  for i in ${d_listOfValues[@]}; do
     if [ $min -lt 0 ]; then
       if [ $i -lt 0 ]; then
         for (( j=0; j<$width+($i*$negativeWidth/$normalizedMax); j++ )); do
-      printf " "
+          o_output+=" "
         done
         for (( j=$width+($i*$negativeWidth/$normalizedMax); j<$negativeWidth; j++ )); do
-      printf "|"
+          o_output+="|"
         done
       else
         for (( j=0; j<$negativeWidth; j++ )); do
-      printf " "
+          o_output+=" "
         done
       fi
     fi
     for (( j=0; j<i*$width/$normalizedMax; j++ )); do
-      printf "|"
+      o_output+="|"
     done
-    printf "\n"
+    o_output+="\n"
   done
 }
 
-function pretty_output {
-  ~human readable and formatted output here~
-}
-
-function raw_output {
-  ~plain data structural output here~
-}
-
 function output {
-  if [ $c_isRawOutput ]; then
-    raw_output
-  else
-    pretty_output
-  fi
+  printf "$o_output"
 }
 
 initialize_input "$@"
