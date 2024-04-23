@@ -8,13 +8,13 @@
 #                                                                              #
 # Type: Yielding Process.                                                      #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     ~additional dependenies here~                                            #
+#     bc                                                                       #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
 # Namspaces: c_r for required config, c_o for opritonal config, d for data, and o for output.
 
-#TODO Save output without DEBUG to default path with a descriptive filename.
+#TODO Save output without DEBUG to default path with a descriptive filename (ex. nameOfCommand__parameters1__parameters2__...etc.).
 
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0

@@ -42,7 +42,7 @@ function print_actions_usage {
 function print_process_usage {
  [ -z "$p_o_fileContent" ] && p_o_fileContent="$(basename $0)"
  function __print_usage {
-   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\L\1_\L\2/g" |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
+   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g"|sed "s/\([a-z,0-9]\)\([A-Z]\)/\1_\L\2/g" |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
  }
  requiredOptionsText="$(__print_usage 'c_r_')"
  optionalOptionsText="$(__print_usage 'c_o_')"
