@@ -45,9 +45,10 @@ function calculate_breakeven_factor {
 
 ## Calculate breakeven factor. The amount provided should be between 0 and 1 and represents the loss portion (percentage in decimals).
 function calculate_breakeven_percentage {
+  [ -z "$p_r_operand" ] && __print_missing_parameter_error "operand"
   result="$(calculate_breakeven_factor)"
   result="$(echo "scale=2;$result-1"|bc -l)"
-  printf "%.2f\n" "$result" # FOrmatting using prontf to ensure leading zero.
+  printf "%.2f\n" "$result" # Formatting using proitf to ensure leading zero.
 }
 
 [ -z "$1" ] && __print_usage
