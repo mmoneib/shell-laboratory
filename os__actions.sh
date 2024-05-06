@@ -37,10 +37,13 @@ function __print_incorrect_action_error {
 ## Enable the awakeness of the laptop when the lid is down with power.
 function keep_awake_when_lid_down_with_power {
   path="/etc/systemd/logind.conf.d/"
-  [ ! -d "$path" ] && mkdir "$path"
-  printf "[Login]\nHandleLidSwitchExternalPower=ignore\n">"$path""custom.conf"
+  if [ ! -d "$path" ]; then
+    sudo mkdir "$path"
+  fi
+  sudo touch "$path""custom.conf"
+  printf "[Login]\nHandleLidSwitchExternalPower=ignore\n"|sudo tee "$path""custom.conf" # Piping with tee instead redirection which doesn't recognize sudo.
   echo "The file $path/custom.conf created with the below content:"
-  cat "/etc/systemd/logind.conf.d/custom.conf"
+  sudo cat "$path""custom.conf"
   systemctl reload systemd-logind
 }
 
@@ -48,7 +51,7 @@ function keep_awake_when_lid_down_with_power {
 function set_to_default_when_lid_down_with_power {
   isUpdated="false"
   path="/etc/systemd/logind.conf.d/"
-  [ -d "$path" ] && rm -r "$path" && isUpdated="true" && systemctl reload systemd-logind
+  [ -d "$path" ] && sudo rm -r "$path" && isUpdated="true" && systemctl reload systemd-logind
   [ "$isUpdated" == "true" ] && echo "HandleLidSwitchExternalPower is set to default." || "Ignoring as $path was not found."
 }
 
