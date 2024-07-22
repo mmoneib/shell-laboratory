@@ -55,11 +55,11 @@ function print_actions_help {
   print_actions_usage
   fileText="$(cat $p_o_fileContent)"
   title="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g)"
-  descriptionText=""
-  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
+  descriptionText="\n\t\t"
+  for ((ln=5;;ln++)); do # Skipped the boundary so as to not put a limit on the length of the description.
     potentialDescriptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
     [ " " == "$potentialDescriptionLine" ] && break
-    descriptionText+="$potentialDescriptionLine"
+    descriptionText+="$potentialDescriptionLine\n\t"
   done
   requiredParamsListText=""
   while read l; do
@@ -112,20 +112,21 @@ helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText
   exit
 }
 
-## Print extended help for Process scripts, including description, general usage, aand configuration parameters.
+## Print extended help for Process scripts, including description, general usage, and configuration parameters.
 function print_process_help {
   [ -z "$p_o_fileContent" ] && p_o_fileContent=$(basename $0)
   print_process_usage
   fileText="$(cat $p_o_fileContent)"
   title="$(echo "$fileText"|head -3|tail -1|sed s/\#\ //g|sed s/\ *\#$//g)"
-  descriptionText=""
-  for ((ln=5;ln<10;ln++)); do # 10 is arbitrary but reasonable as the description should be in the first 10 lines.
+  descriptionText="\n\t\t"
+  for ((ln=5;;ln++)); do # Skipped the boundary so as to not put a limit on the length of the description.
     potentialDescriptionLine="$(echo "$fileText"|head -$ln|tail -1|sed s/\#\ //g|sed s/\ *\#$/\ /g)"
     [ " " == "$potentialDescriptionLine" ] && break
-    descriptionText+="$potentialDescriptionLine"
+    descriptionText+="$potentialDescriptionLine\n\t\t"
   done
   requiredParamsListText=""
   while read l; do
+    [ "--" == "$l" ] && continue # Skipping potential grep's group separator. 
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && requiredParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
   done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_r_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_r_.*\)/\1/g")"
@@ -134,6 +135,7 @@ function print_process_help {
   description=""
   parameter=""
   while read l; do
+    [ "--" == "$l" ] && continue # Skipping potential grep's group separator. 
     [ -z "$description" ] && description="$l" && continue
     [ -z "$parameter" ] && parameter="$l" && optionalParamsListText+="\t\t$parameter -> $description\n" && description="" && parameter=""
   done <<< "$(grep -v "grep" $p_o_fileContent|grep -B1 ") c_o_"|sed "s/^.*\#\# //g"|sed "s/.*\([a-z,A-Z]\)\() c_o_.*\)/\1/g")"

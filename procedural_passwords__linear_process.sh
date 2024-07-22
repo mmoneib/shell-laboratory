@@ -59,7 +59,7 @@ function initialize_input {
   invCapsParameterStmt="-a flip_case -t {1}"
   rollCharsParameterStmt="-a roll_chars -t {1} -o {2}"
   mixCharsParameterStmt="-a mix_chars -t {1} -T {2}"
-  while getopts "ha:p:s:" o; do
+  while getopts "ha:lp:s:" o; do
     case "$o" in
     ## A string or file containing the personal alias alluding to the target. Example: personal_google_account, MyGmail...etc.
     a) c_r_alias="$OPTARG" ;;
