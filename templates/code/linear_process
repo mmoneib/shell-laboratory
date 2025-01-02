@@ -22,6 +22,16 @@ done
 scriptPath=$(dirname $scriptFile)
 source "$scriptPath/"~sourced script name here~.sh "skip_run" # The parameter skips initialization output.
 
+function __print_required_parameter_missing_value_error {
+  echo "Validation Error: The required parameter '$1' is required but missing. Please check Help for more info.">&2
+  exit 1
+}
+
+function __print_incorrect_parameter_value_error {
+  echo "Validation Error: The provided value '$1' is not supported by this parameter '$2'. Please check Help for more info.">&2
+  exit 1
+}
+
 function __print_usage {  
   sh $(dirname $0)/help__actions.sh -a print_process_usage -t $0
   exit

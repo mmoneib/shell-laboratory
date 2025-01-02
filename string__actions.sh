@@ -192,6 +192,31 @@ function is_string_with_special_character {
   [ ! -z "$(echo $p_o_text | grep "[^0-9A-Za-z]")" ] && echo "true" || echo "false"
 }
 
+## Count the words (isolated by spaces) in a text and return the count per word (including attached punctuations) as a histogram.
+function produce_histogram_of_words {
+  [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
+  [ -z "$p_o_separator" ] && __print_missing_parameter_error "separator"
+  #[ -z "$p_o_range" ] && p_o_range="[^a-zA-Z0-9']" # The ^ symbol is used for negation of whatever is not included in the range; hence, symbols.
+  declare -A histogram
+  token=""
+  tokens=()
+  while read -n1 ch; do
+    [ ! -z "$ch" ] && token+="$ch" && continue
+    [ ! -z "$token" ] && tokens+=("$token")
+    token=""
+  done <<< "$p_o_text"
+  for (( i=0; i < ${#tokens[@]}; i++ )); do
+    retrievedToken="${tokens[$i]}"
+    [ -z "${histogram["$retrievedToken"]}" ] && count=1
+    [ ! -z "${histogram["$retrievedToken"]}" ] && count=$((${histogram["$retrievedToken"]}+1))
+    histogram["$retrievedToken"]=$count
+  done
+  for i in ${!histogram[@]}; do # TODO: Allow using the zsh alternative for expansion.
+    printf "$i$p_o_separator${histogram[$i]}$p_o_separator" # A single type of separators is enough as consumer can interpret keys and values by expecting alternations.
+  done
+  printf "\n"
+}
+
 ## Keep the first and last letters only in each word of the supplied text.
 function remove_internal_chars {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
@@ -394,7 +419,7 @@ function show_decimals_of_string {
   decimalsList=""
   for ((i=0;i<${#p_o_text};i++)); do
      p_o_character="${p_o_text:i:1}"
-    decimalsList+="$(show_decimal_of_char),"
+    decimalsList+="$(show_decimal_of_char)$p_o_separator"
   done
   printf "$decimalsList\n"
 }
@@ -466,7 +491,7 @@ if [ ! -z "$inp" ]; then
   done 
 fi
 # Parse options and parameters.
-while getopts "ha:b:c:d:e:il:o:p:r:s:t:T:" o; do
+while getopts "ha:b:c:d:e:il:o:p:r:s:S:t:T:x:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
@@ -491,10 +516,14 @@ while getopts "ha:b:c:d:e:il:o:p:r:s:t:T:" o; do
     r) p_o_range=$OPTARG ;;
     ## A sequence of numbers used in calculated string manipulations.
     s) p_o_sequence=$OPTARG ;;
+    ## A separator used for primary separation of tokens as in a list of inputs or outputs.
+    S) p_o_separator=$OPTARG ;;
     ## The text to be queried or manipulated. This can be a string specified via command line, or a path to a text file.
     t) p_o_text="$OPTARG" ;;
     ## A second text to be used in the processing of the original text in order to manipulate it or mix with it.
     T) p_o_text2="$OPTARG" ;;
+    ## A second separator used for secondary separation of entries as in dictionaries of inputs or outputs.
+    x) p_o_separator2="$OPTARG" ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
