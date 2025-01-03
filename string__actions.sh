@@ -90,6 +90,39 @@ function flip_case {
   printf "$flippedCaseText";
 }
 
+## Gets the repititions at the end of the specified text, if available.
+function get_repititions_at_end_of_text {
+  repitition=""
+  windowSize=1
+  textSize=${#p_o_text}
+  potentialRepitition=""
+  potentialRepititionLastIndex=${#p_o_text}
+  while [ $windowSize -le $(( textSize/2 )) ]; do
+      i=$(( textSize-2*windowSize ))
+      comparing="${p_o_text:i:windowSize}"
+      compared="${p_o_text:(( i+windowSize )):windowSize}"
+      if [ "$comparing" == "$compared" ]; then
+        potentialRepitition="$comparing"
+        break
+      fi
+    (( windowSize++ ))
+  done
+  restOfRepititionFromStart=""
+  j=$(( i-1 ))
+  comparingChar="${p_o_text:j:1}"
+  comparedChar="${p_o_text:$(( j+windowSize )):1}"
+  while [ "$comparingChar" == "$comparedChar" ]; do
+    restOfRepititionFromStart="$comparingChar$restOfRepititionFromStart"
+    ((j--))
+    comparingChar="${p_o_text:j:1}"
+    comparedChar="${p_o_text:$(( j+windowSize )):1}"
+  done
+  repitition="$restOfRepititionFromStart$potentialRepitition$potentialRepitition"
+  if [ ! -z "$repitition" ]; then
+    echo "$repitition"
+  fi
+}
+
 ## Insert a string of characters in the specified mapped positions within the whole text provided. Positions start at 1.
 function insert_string_in_positions_within_text {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
@@ -196,7 +229,6 @@ function is_string_with_special_character {
 function produce_histogram_of_words {
   [ -z "$p_o_text" ] && __print_missing_parameter_error "text"
   [ -z "$p_o_separator" ] && __print_missing_parameter_error "separator"
-  #[ -z "$p_o_range" ] && p_o_range="[^a-zA-Z0-9']" # The ^ symbol is used for negation of whatever is not included in the range; hence, symbols.
   declare -A histogram
   token=""
   tokens=()
