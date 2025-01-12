@@ -1,4 +1,6 @@
 #!/bin/sh
+# TODO Move to Metaphor.
+#TODO Add proper description and help which follows the convention.
 usage="Usage: .$(basename $0) -c choices_here _n number_of_iterations_here -v choice_values_here -w weights_pf_iterations_here [-s stop_choice_pattern_here] [-m multiplication_indicator_here] [-p compounding_indicator_here]"
 while getopts "n:c:v:w:h:s:mp" o; do
   case "$o" in

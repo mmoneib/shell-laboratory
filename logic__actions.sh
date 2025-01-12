@@ -14,6 +14,8 @@
 # Required parameters are denoted with the p_r_ prefix.
 # Optional parameters are denoted with the p_o_ prefix.
 
+#TODO Add TruthTable generation out of 1 an 0 or corresponding symbols.
+
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
   exit 1

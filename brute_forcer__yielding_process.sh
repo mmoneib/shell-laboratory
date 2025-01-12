@@ -67,7 +67,7 @@ function initialize_input {
   for ((i=0; i<${#c_r_chars};i++)) do
     d_chars[i]="${c_r_chars:$i:1}"
   done
-  d_sizeOfSelection=${#d_chars[@]}
+  d_sizeOfCharSet=${#d_chars[@]}
   d_word=""
   d_count=0
   d_sizeOfWord=$c_r_minimumSizeOfWord
@@ -77,9 +77,14 @@ function initialize_input {
 
 function process_data {
   while [ $d_sizeOfWord -le $c_r_maximumSizeOfWord ]; do
-    while [ $d_count -lt $(($d_sizeOfSelection**$d_sizeOfWord)) ]; do
-      for ((i=0; i<$d_sizeOfWord; i++)); do
-        d_word="${d_chars[(( (d_count/(d_sizeOfSelection**i))%d_sizeOfSelection ))]}$d_word" # Truth table
+    countPerWordSize=0
+    numOfPossibleWordsPerWordSize=$d_sizeOfCharSet**$d_sizeOfWord
+    # Truth Table.
+    while [ $countPerWordSize -lt $(( numOfPossibleWordsPerWordSize )) ]; do
+      for (( c=0; c<$d_sizeOfWord; c++ )); do # An iteration per character creation.
+        # Truth Table Entry: roll a counter over each character's position with a different rolling window, increasing geometrically and
+        # rightwardly by the number of possible characters. Same like converting decimal to binary.
+        d_word="${d_chars[(( (countPerWordSize/(d_sizeOfCharSet**c))%d_sizeOfCharSet ))]}$d_word" # Left-propagating string, better than descending loop.
       done
       o_word="$d_word"
       if [ $c_o_verbose ]; then
@@ -88,6 +93,7 @@ function process_data {
       output
       d_word=""
       d_count=$((d_count+1))
+      countPerWordSize=$((countPerWordSize+1))
     done
     d_sizeOfWord=$(( d_sizeOfWord+1 ))
   done
