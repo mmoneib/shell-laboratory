@@ -5,7 +5,7 @@
 # An in-place, bottom-up text scroller for Linux command-line as in end        #
 # credits of a movie. It can be used in a piping context or on its own.        #
 #                                                                              #
-# Type: Yielding Process   .                                                   #
+# Type: Yielding Process.                                                      #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
 # Developed by: Muhammad Moneib.                                               #
 ################################################################################

@@ -36,18 +36,19 @@ function __print_incorrect_action_error {
   exit 1
 }
 
-## Calculate breakeven factor. The amount provided should be between 0 and 1 and represents the loss portion (percentage in decimals).
+## Calculate factor needed to multiply remaining capital to reach breakeven. Amount provided to be between 0 and 1 and represents the loss portion (percentage in decimals).
 function calculate_breakeven_factor {
   [ -z "$p_r_operand" ] && __print_missing_parameter_error "operand"
   result="$(echo "scale=2;1/(1-$p_r_operand)"|bc -l)"
   echo "$result"
 }
 
-## Calculate breakeven factor. The amount provided should be between 0 and 1 and represents the loss portion (percentage in decimals).
+## Calculate percentage of gain needed to reach breakeven. Amount provided to be between 0 and 100 and represents the loss percentag.
 function calculate_breakeven_percentage {
   [ -z "$p_r_operand" ] && __print_missing_parameter_error "operand"
+  p_r_operand="$(echo "$p_r_operand/100"|bc -l)"
   result="$(calculate_breakeven_factor)"
-  result="$(echo "scale=2;$result-1"|bc -l)"
+  result="$(echo "scale=2;($result-1)*100"|bc -l)"
   printf "%.2f\n" "$result" # Formatting using proitf to ensure leading zero.
 }
 

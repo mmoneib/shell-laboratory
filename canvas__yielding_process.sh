@@ -1,5 +1,4 @@
 #!/bin/bash
-
 ################################################################################
 # Canvas                                                                       #
 #                                                                              #
@@ -12,6 +11,8 @@
 # screen. Slower movement is a good remedy in that case. Deletion of chars can #
 # be achieved by hitting Space bar.                                            #
 #                                                                              #
+# Type: Yielding Process.                                                      #
+# Dependencies: Unix-like Shell (tested with Bash)                             #
 # Developer: Muhammad Moneib                                                   #
 ################################################################################
 
