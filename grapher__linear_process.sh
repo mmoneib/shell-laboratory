@@ -42,7 +42,7 @@ function initialize_input {
     case "$o" in
     ## List of keys and/or values separated by spaces.
     d) c_r_dictLabelsValues=$OPTARG ;;
-    ## Dis[lay labels inline with the bars.
+    ## Display labels inline with the bars.
     i) c_o_isInline="true" ;;
     ## Indicator that the dictionary parameter doesn't hold labels, but only values.
     l) c_o_isList="true" ;;
