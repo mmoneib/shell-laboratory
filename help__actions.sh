@@ -31,7 +31,7 @@ function print_missing_parameter_error {
 function print_actions_usage {
  [ -z "$p_o_fileContent" ] && p_o_fileContent="$(basename $0)"
  function __print_usage {
-   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g" |sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\1_\2/g"# |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
+   grep -o ".) $1.*=" $p_o_fileContent|grep -v "grep -v"|sed "s/\(.\)) $1/-\1 /g" |sed "s/\(.[a-z,0-9]\)\([A-Z]\)/\1_\2/g" |sed "s/=$/_here/g"|tr '\n' ' '|sed "s/\ $//g"
  }
  requiredOptionsText="$(__print_usage 'p_r_')"
  optionalOptionsText="$(__print_usage 'p_o_')"
@@ -100,12 +100,12 @@ function print_actions_help {
       param="$(grep ".) $param=" $p_o_fileContent|sed "s/\(^.*\)\(.\))\(.*\)/\2/g")"
       [ -z "$(echo "$actionParamMatrix"|grep "$func.*$param,")" ] && actionParamMatrix+="$param,"
     elif [ "$l" == "}" ]; then
-      [ ! -z "$func" ] && actionParamMatrix=${actionParamMatrix:0:$((${#actionParaMatrix}-1))}"\n"
+      [ ! -z "$func" ] && actionParamMatrix="${actionParamMatrix:0:$(( ${#actionParamMatrix}-1 ))}\n"
       func=""
       param=""
    fi
  done <<< "$fileText"
-actionParamMatrix=${actionParamMatrix:0:$((${#actionParamMatrix}-2))}
+actionParamMatrix=${actionParamMatrix:0:$(( ${#actionParamMatrix}-2 ))}
 helpText="$title: $descriptionText$requiredParamsListText$optionalParamsListText$actionsListText$actionParamMatrix
 "
   printf "$helpText"
@@ -160,6 +160,6 @@ while getopts "ha:t:p:" o; do
     *) print_actions_usage ;;
   esac
 done
-[ -z "$p_r_action" ] && __print_incorrect_action_error
+[ -z "$p_r_action" ] && print_incorrect_action_error
 # Generic action call with positional parameters based on available ones.
 [ ! -z "$(grep "^function $p_r_action" $0)" ] && $p_r_action || print_incorrect_action_error
