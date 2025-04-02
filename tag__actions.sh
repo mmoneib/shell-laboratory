@@ -14,7 +14,6 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 #TODO Add incorrect parameter error.
-#TODO Make reading arrays work for zsh.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -73,6 +72,16 @@ function find_files_with_tags {
   queryCommand+="|cut -d : -f 1|sed 's/\/\.\(.*\)$tagsFilePostfix/\/\1/g'"
   echo "Executing the command $queryCommand"
   eval "$queryCommand"
+}
+
+
+## Gets the value of the specified key of key=value tag associated with the specified file.
+function get_tagged_value_of_file {
+  [ -z "$p_r_path" ] &&  __print_missing_parameter_error "path"
+  [ -z "$p_o_tags" ] &&  __print_missing_parameter_error "tags"
+  tagFilePath="$(dirname $p_r_path)/.$(basename $p_r_path)$tagsFilePostfix"
+  value="$(cat $tagFilePath|tr "$separator" '\n'|grep $p_o_tags'='|cut -d '=' -f 2)"
+  echo "$value"
 }
 
 ## Show the combined sorted list of all unique tags used across all files in the specified directory.
