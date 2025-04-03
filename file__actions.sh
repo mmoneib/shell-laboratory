@@ -6,7 +6,6 @@
 #                                                                              #
 # Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     ~additional dependenies here~                                            #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -35,29 +34,38 @@ function __print_incorrect_action_error {
   exit 1
 }
 
-## ~comment describing the action here~
-function ~action function name here~ {
-  [ -z "~parameter variable here~" ] && __print_missing_parameter_error ~parameter_name_here~
-  ~further validation of optional parameters or for types here~
-  ~action implementation here~
+## Add a file with an automated name based on the specified prefix (if any) and the next number in thea sequence based on the highest foundt in the specified directory.
+function add_sequential_file {
+  [ -z "$p_r_path" ] && __print_missing_parameter_error "path"
+  [ -z "$p_o_content" ] && __print_missing_parameter_error "content"
+  highestSequence="$(ls -1 $p_r_path|grep "$p_o_prefix"[0-9]|sort -n|tail -1)"
+  [ ! -z "$p_o_prefix" ] && highestSequence="$(echo "$highestSequence"|sed "s/$p_o_prefix//g")"
+  [ -z "$highestSequence" ] && highestSequence="0"
+  (( highestSequence++ ))
+  echo "$p_o_content" > "$p_r_path/$p_o_prefix$highestSequence"
+  echo "Created file $p_o_prefix$highestSequence."  
 }
 
 [ -z "$1" ] && __print_usage
 # Check if input is piped.
 read -t 0.1 inp; # Doesn't read more than a line.
 if [ ! -z "$inp" ]; then
-  ~input text parameter here~="$inp"
+  p_r_path="$inp"
   while read inp; do
-     ~input text parameter here~+="\n$inp"
+     p_r_path+="\n$inp"
   done
 fi
 # Parse options and parameters.
-while getopts "ha:~getopts parameter string here~" o; do
+while getopts "ha:b:c:p:" o; do
   case $o in
     ## The name of the function to be triggered.
     a) p_r_action=$OPTARG ;;
-    ~description of parameter here~
-    ~parameter character here~) ~parameter variable here~=$OPTARG ;;
+    ## The path to the file or the directory upon which the operation should be performed.
+    p) p_r_path=$OPTARG ;;
+    ## A prefix to be used in file sequencing.
+    b) p_o_prefix=$OPTARG ;;
+    ## The content of the file specified.
+    c) p_o_content=$OPTARG ;;
     h) __print_help ;;
     *) __print_usage ;;
   esac
