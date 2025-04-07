@@ -4,7 +4,7 @@
 #                                                                              #
 # A set of fanctions for enhancing files with searchable metadata.             #    
 #                                                                              #
-# Type: Actions                                               .                #
+# Type: Actions                                                                #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
@@ -14,6 +14,7 @@
 # Optional parameters are denoted with the p_o_ prefix.
 
 #TODO Add incorrect parameter error.
+#TODO Add prefix for constants.
 
 function __print_usage {
   sh $(dirname $0)/help__actions.sh -a print_actions_usage -t $0
@@ -84,6 +85,11 @@ function get_tagged_value_of_file {
   echo "$value"
 }
 
+function __get_tags_file_path {
+  path=$1
+  echo "$(dirname $path)/.$(basename $path)$tagsFilePostfix" 
+}
+
 ## Show the combined sorted list of all unique tags used across all files in the specified directory.
 function list_all_tags {
   [ -z "$p_r_path" ] &&  __print_missing_parameter_error "path"
@@ -103,6 +109,23 @@ function remove_tag_from_file {
   tagsStr="$(cat $tagFilePath)"
   echo "File: $p_r_path"
   echo "Tags: $tagsStr"
+}
+
+## Report all files and their tags of the specified directory as one document.
+function report_files_and_tags {
+  [ -z "$p_r_path" ] &&  __print_missing_parameter_error "path"
+  echo "--BEGIN-REPORT------"
+  while read inp; do
+    echo "--------------------"
+    filePath="$p_r_path/$inp"
+    echo "File: $filePath"
+    cat $filePath
+    tagsFilePath="$(__get_tags_file_path $filePath)"
+    echo "Tags file: $tagsFilePath"
+    cat $tagsFilePath
+    echo "--------------------"
+  done <<< "$(ls -1 $p_r_path|sort -n)"
+  echo "--END-REPORT--------"
 }
 
 [ -z "$1" ] && __print_usage
