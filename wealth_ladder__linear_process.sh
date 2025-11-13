@@ -68,7 +68,7 @@ function initialize_input {
     c_o_currentAmount=$c_r_initialAmount
   fi
   d_numberOfInterestApplicationPerIteration=1 # Kept as 1 as I want to normalize the calculation with the time interval.
-  d_timePeriod=$c_r_numberOfIterations # Since we will reapply the calculation for each iteration, we only need one time period.
+  d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
   d_amount=$c_r_initialAmount
 }
 
@@ -95,7 +95,6 @@ function process_data {
     fi
     exchangeRate=$(echo "scale=6;$c_o_currentOppositeAmount/$factor"|bc -l)
   fi
-  d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
   i=1
   d_referenceCurrentIteration=0 # Will indicate the current position.
   currentMinusPreviousAmount=0
