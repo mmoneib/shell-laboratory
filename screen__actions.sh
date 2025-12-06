@@ -119,7 +119,7 @@ function print_text_with_color_and_background {
 
 [ -z "$1" ] && __print_usage
 # Check if input is piped.
-read -t 0.1 inp; # Doesn't read more than a line.
+read -t 0.1 inp 2>/dev/null # Doesn't read more than a line.
 if [ ! -z "$inp" ]; then
   p_o_text="$inp"
   while read inp; do

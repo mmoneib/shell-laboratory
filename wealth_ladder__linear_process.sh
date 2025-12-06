@@ -8,7 +8,7 @@
 #                                                                              #
 # Type: Linear Process.                                                        #
 # Dependencies: Unix-like Shell (tested with Bash)                             #
-#     screen__actions.sh.                                                       #
+#     screen__actions.sh.                                                      #
 # Developed by: Muhammad Moneib                                                #
 ################################################################################
 
@@ -64,8 +64,11 @@ function initialize_input {
   if [ -z $c_r_initialAmount ] || [ -z $c_r_interestRate ] || [ -z $c_r_numberOfIterations ]; then
     __print_usage
   fi 
+  d_currentAmount=0
   if [ -z $c_o_currentAmount ]; then
-    c_o_currentAmount=$c_r_initialAmount
+    d_currentAmount=$c_r_initialAmount
+  else
+    d_currentAmount=$c_o_currentAmount
   fi
   d_numberOfInterestApplicationPerIteration=1 # Kept as 1 as I want to normalize the calculation with the time interval.
   d_timePeriod=1 # Since we will reapply the calculation for each iteration, we only need one time period.
@@ -79,19 +82,19 @@ function get_expected_value_equation {
 function process_data {
   o_expectedValues=[]
   o_overallProfits=[]
-  if [ ! -z "$c_o_currentAmount" ] && [ ! -z "$c_o_currentLeveragedAmount" ]; then
-    leverageFactor=$(echo "scale=2;$c_o_currentLeveragedAmount/$c_o_currentAmount"|bc -l)
+  if [ ! -z "d_currentAmount" ] && [ ! -z "$c_o_currentLeveragedAmount" ]; then
+    leverageFactor=$(echo "scale=2;$c_o_currentLeveragedAmount/$d_currentAmount"|bc -l)
   else
     leverageFactor=1 # Better to avoid branching in the code.
   fi
   d_expectedValueEquation=$(get_expected_value_equation)
   o_equation=$d_expectedValueEquation # For printing purposes.
   o_amountAfterIteration=$(echo "scale=6;$d_expectedValueEquation"|bc -l)
-  if [ ! -z "$c_o_currentAmount" ] && [ ! -z "$c_o_currentOppositeAmount" ]; then
+  if [ ! -z "$d_currentAmount" ] && [ ! -z "$c_o_currentOppositeAmount" ]; then
     if [ "$leverageFactor" != "1" ]; then
       factor=$c_o_currentLeveragedAmount
     else
-      factor=$c_o_currentAmount
+      factor=$d_currentAmount
     fi
     exchangeRate=$(echo "scale=6;$c_o_currentOppositeAmount/$factor"|bc -l)
   fi
@@ -107,14 +110,14 @@ function process_data {
        factor="$exchangeRate*$leverageFactor"
        o_oppositeValues[$i]=$(echo "scale=6;$d_expectedValue*$factor"|bc -l)
      fi
-     if [ $d_referenceCurrentIteration -eq 0 ] && [ $(echo "$d_expectedValue>$c_o_currentAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
-       if [ $(echo "$currentMinusPreviousAmount>=$d_expectedValue-$c_o_currentAmount"|bc) == 1 ]; then #
+     if [ $d_referenceCurrentIteration -eq 0 ] && [ $(echo "$d_expectedValue>$d_currentAmount"|bc) == 1 ]; then # Bash doesn't compare floats, therefore bc.
+       if [ $(echo "$currentMinusPreviousAmount>=$d_expectedValue-$d_currentAmount"|bc) == 1 ]; then #
          d_referenceCurrentIteration=$i
        else
          d_referenceCurrentIteration=$((i-1))
        fi
      else
-       currentMinusPreviousAmount=$(echo "$c_o_currentAmount-$d_expectedValue"|bc)
+       currentMinusPreviousAmount=$(echo "$d_currentAmount-$d_expectedValue"|bc)
      fi
      d_amount=$d_expectedValue # Reason why d_timePeriod is set to 1 above.
      ((i=i+1))
@@ -144,14 +147,14 @@ function pretty_output {
        row="$row -- Opposite Leveraged Value: ${o_oppositeValues[$i]}"
      fi
      row="$row -- Overall Profit: ${o_overallProfits[$i]}"
-     if [ "$i" == "$o_referenceCurrentIteration" ]; then
+     if [ ! -z "$c_o_currentAmount" ] && [ "$i" == "$o_referenceCurrentIteration" ]; then
        sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 246 # White on grey
-     elif [ ! -z "$c_o_stopLossIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"-"$c_o_stopLossIterations")) ]; then
+     elif [ ! -z "$c_o_stopLossIterations" ] && [ "$i" == $(( $o_referenceCurrentIteration - $c_o_stopLossIterations )) ]; then
        sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 196 # White on red
-     elif [ ! -z "$c_o_takeProfitIterations" ] && [ "$i" == $(("$o_referenceCurrentIteration"+"$c_o_takeProfitIterations")) ]; then #TODO Calc should move to processing.
+     elif [ ! -z "$c_o_takeProfitIterations" ] && [ "$i" == $(( $o_referenceCurrentIteration + $c_o_takeProfitIterations )) ]; then #TODO Calc should move to processing.
        sh $screen__actions -a print_text_with_color_and_background -t "$row" -c 7 -b 34 # White on green
      else
-       if [ $c_o_verbosity == true ]; then
+       if [ $c_o_verbosity == true ] || [ -z $c_o_currentAmount ]; then
          printf "$row\n"
        fi
      fi
