@@ -47,6 +47,11 @@ function keep_awake_when_lid_down_with_power {
   systemctl reload systemd-logind
 }
 
+## Remove duplicates of DNF software package manager. Useful in some cases while updating distros.
+function remove_dnf_duplicates {
+  sudo rpm -e --nodeps $(sudo dnf check 2>/dev/null | grep duplicate | cut -f1 -d' ')
+}
+
 ## Set to default the awakeness of the laptop when the lid is down with power.
 function set_to_default_when_lid_down_with_power {
   isUpdated="false"
